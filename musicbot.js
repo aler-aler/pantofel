@@ -13,11 +13,73 @@ let voteSkipped = { };
 let globalVoiceChannel = null;
 
 let songs = [];
+let songQueue = [];
+
+function shuffleArray ( array )
+{
+	let newArray = Array.from ( array );
+	let remaining = newArray.length, index, temp;
+	
+	while ( remaining > 0 )
+	{
+		index = Math.floor ( ( Math.random ( ) * remaining ) );
+		remaining = remaining - 1;
+		
+		temp = newArray [remaining];
+		newArray [remaining] = newArray [index];
+		newArray [index] = temp;
+	}
+	
+	return newArray;
+}
+
+function musicQueueRandomize ( )
+{
+	logger.log ( '[Info/automusic] a new song queue will now be randomized!' );
+	songQueue = shuffleArray ( songs );
+}
+
+function musicQueueInsert ( song )
+{
+	logger.log ( '[Info/automusic] added song to queue: ' + song );
+	songQueue.push ( song );
+}
+
+function musicQueuePop ( )
+{
+	return songQueue.pop ( );
+}
+
+function getNextSong ( )
+{
+	if ( songQueue.length > 0 ) return musicQueuePop ( );
+	else
+	{
+		generateSongList ( );
+		musicQueueRandomize ( );
+
+		return musicQueuePop ( );
+	}
+}
+
+function generateSongList ( )
+{
+	songs = [ ];
+
+	fs.readdirSync ( './playlist' ).forEach ( function ( file )
+	{
+		songs.push ( file );
+	} );
+}
+
+function musicQueueGet ( )
+{
+	return Array.from ( songQueue );
+}
 
 function playMusic ( )
 {
-	generateSongList ( );
-	let song = getRandomSong ( );
+	let song = getNextSong ( );
 
 	logger.log ( '[Sound/automusic] now playing: ' + song );
 
@@ -75,25 +137,9 @@ function playMusic ( )
 	}
 }
 
-function getRandomSong ( )
-{
-	let rng = Math.floor ( Math.random ( ) * songs.length );
-	return songs [rng];
-}
-
-function generateSongList ( )
-{
-	fs.readdirSync ( './playlist' ).forEach ( function ( file )
-	{
-		songs.push ( file );
-	} );
-}
-
 Client.on ( 'ready', ( ) => 
 {
 	// client is ready
-	generateSongList ( );
-
 	logger.log ( '[Info/automusic] logged in!' );
 	Client.user.setActivity ( 'Minecraft' );
 	
@@ -165,7 +211,24 @@ Client.on ( 'message', ( message ) =>
 	}
 } );
 
+Client.on ( 'disconnect', function ( )
+{
+	logger.error ( '[Error/musicbot] disconnected. bot will try to reconnect soon (10 seconds)' );
+
+	setTimeout ( function ( )
+	{
+		logger.log ( '[Info/musicbot] reconnecting' );
+		Client.login ( Config.token );
+	}, 10000 );
+} );
+
 module.exports.run = function ( )
 {
+	logger.log ( '[Info/musicbot] initializing bot account' );
 	Client.login ( Config.token );
 }
+
+module.exports.musicQueueInsert = musicQueueInsert;
+module.exports.musicQueuePop = musicQueuePop;
+module.exports.musicQueueRandomize = musicQueueRandomize;
+module.exports.musicQueueGet = musicQueueGet;

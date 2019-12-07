@@ -22,7 +22,7 @@ function handleUploadedFile ( filename, callback, error )
 
                 fs.renameSync ( filename, './playlist/' + name + '.mp3' );
                 logger.log ( '[Info/WebServer] Added new music ' + name );
-                return callback ( );
+                return callback ( name );
             }
             else 
             {

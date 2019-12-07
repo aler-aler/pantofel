@@ -8,6 +8,8 @@ const WebServer = require ( './index.js' );
 const fileutil = require ( './fileutil.js' );
 const logger = require ( './logger.js' );
 
+const MusicBot = require ( './musicbot.js' );
+
 function verifyUserCredentials ( access_token, token_type, success, failure )
 {
     requestlib.get ( {
@@ -58,8 +60,10 @@ WebServer.registerRequestHandler ( '/process', function ( request, response, req
             }
 
             let path = files.song.path;
-            fileutil.handleUploadedFile ( path, function ( )
+            fileutil.handleUploadedFile ( path, function ( songname )
             {
+                MusicBot.musicQueueInsert ( songname + '.mp3' );
+
                 // success
                 response.writeHead ( 200, { 'Content-Type': 'application/json' } );
                 response.write ( JSON.stringify ( { success: true, message: 'upload complete' } ) );
