@@ -1,0 +1,19 @@
+{
+  "name": "automusic",
+  "version": "1.0.0",
+  "description": "automatic music bot",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "rekjn",
+  "license": "ISC",
+  "dependencies": {
+    "cookies": "^0.8.0",
+    "discord.js": "github:discordjs/discord.js",
+    "ffmpeg": "0.0.4",
+    "formidable": "^1.2.1",
+    "opusscript": "0.0.7",
+    "request": "^2.88.0"
+  }
+}

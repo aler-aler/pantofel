@@ -1,0 +1,129 @@
+div.modalBlackout {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 10000;
+}
+
+div.modalBlackout > div.modalObject {
+    background: #fff;
+    width: 650px;
+    position: absolute;
+    top: 130px;
+    left: calc(50% - 325px);
+    font-family: sans-serif;
+    color: #3a3a3a;
+}
+
+div.modalBlackout > div.modalObject > div.modalObjectTitle {
+    background: #d8d8d8;
+    padding: 15px;
+    font-weight: bold;
+    font-size: 110%;
+}
+
+div.modalBlackout > div.modalObject > div.modalObjectContent {
+    margin-left: 20px;
+    margin-top: 15px;
+    margin-bottom: 15px;
+    margin-right: 20px;
+}
+
+div.modalBlackout > div.modalObject > div.modalObjectOptions {
+    padding: 15px;
+    padding-top: 9px;
+    padding-bottom: 10px;
+    background: #d8d8d8;
+    display: flex;
+    flex-direction: row-reverse;
+}
+
+div.modalBlackout > div.modalObject > div.modalObjectOptions > a.modalOption {
+    display: block;
+    background: #3a3a3a;
+    color: #dedede;
+    padding: 10px 15px;
+    cursor: pointer;
+    border-radius: 2px;
+    transition: background .25s, border-color .25s;
+    border: 2px #3a3a3a solid;
+    margin-left: 5px;
+    font-weight: bold;
+    font-size: 95%;
+    height: 16px;
+}
+
+div.modalBlackout > div.modalObject > div.modalObjectOptions > a.modalOption:hover {
+    background: #333333;
+    border-color: #333333;
+}
+
+div.modalBlackout > div.modalObject > div.modalObjectOptions > a.modalOption.alternate {
+    background: transparent;
+    color: #3a3a3a;
+    transition: background .25s, border-color .25s, color .25s;
+}
+
+div.modalBlackout > div.modalObject > div.modalObjectOptions > a.modalOption.alternate:hover {
+    color: #000000;
+    border-color: #000000;
+}
+
+div.modalBlackout > div.modalObject > div.modalObjectTitle {
+    display: flex;
+    padding-bottom: 14px;
+    line-height: 20px;
+}
+
+div.modalBlackout > div.modalObject > div.modalObjectTitle > a.modalObjectClose {
+    display: block;
+    background-image: url('closeicon.png');
+    width: 16px;
+    height: 16px;
+    margin-top: 1px;
+    background-size: 16px 16px;
+    cursor: pointer;
+    margin-left: auto;
+}
+
+input[type=text].paintInput {
+    font-size: 105%;
+    border: 2px #ccc solid;
+    border-radius: 2px;
+    transition: border-color .25s;
+    display: block;
+    width: 80%;
+    margin: auto;
+    margin-top: 5px;
+    padding: 5px 10px;
+}
+
+input[type=text].paintInput:focus {
+    border-color: #bbb;
+}
+
+div.saveDialogBlackout {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0px;
+    left: 0px;
+    background: rgba(255, 255, 255, 0.4);
+    /* display: flex; */
+    align-items: center;
+    justify-content: center;
+    display: none;
+}
+
+div.saveDialogBlackout > img {
+    width: 50px;
+}
+
+div.error {
+    color: #800000;
+    background: #ff8080;
+    border: #800000 2px solid;
+    border-radius: 3px;
+    padding: 10px 15px;
+    margin-bottom: 12px;
+}

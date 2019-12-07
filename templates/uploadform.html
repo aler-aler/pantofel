@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <link rel="stylesheet" href="style.css" type="text/css" />
+        <link rel="stylesheet" href="modal.css" type="text/css" />
+        <script src="modal.js"></script>
+        <title>radio patapedia</title>
+        <script>
+            // frontend
+            let isUploading = false;
+
+            window.addEventListener ( 'load', function ( )
+            {
+                document.querySelector ( '#uploadForm' ).addEventListener ( 'change', function ( ev )
+                {
+                    let upload = document.querySelector ( '#file' );
+                    let label = document.querySelector ( '#desc' );
+
+                    if ( upload.files.length > 0 )
+                    {
+                        let name = upload.files [0].name;
+                        label.innerHTML = name;
+                    }
+                } );
+
+                document.querySelector ( '#uploadForm' ).addEventListener ( 'submit', function ( ev )
+                {
+                    ev.preventDefault ( );
+
+                    let formData = new FormData ( this );
+                    let blackout = document.querySelector ( '#uploadBlackout' );
+                    
+                    if ( !isUploading )
+                    {
+                        let request = new XMLHttpRequest ( );
+                        request.withCredentials = true;
+
+                        blackout.style.display = 'block';
+
+                        isUploading = true;
+                        request.open ( 'POST', 'process' );
+
+                        request.addEventListener ( 'readystatechange', function ( reqEvent )
+                        {
+                            if ( request.readyState == XMLHttpRequest.DONE )
+                            {
+                                if ( request.status == 200 )
+                                {
+                                    modalbox.displayModal ( 'progressDialog', 'Przesyłanie zakończone', '<p>Twoja piosenka została dodana do puli. Niedługo powinna pojawić się na czacie głosowym ♪</p>', 
+                                        [ 
+                                            { id: 'progressDialogOk', message: 'Ok', handler: function ( ev ) { 
+                                                window.location.href = '/';
+                                            } }
+                                        ] 
+                                    );
+                                }
+                                else
+                                {
+                                    try 
+                                    { 
+                                        let jsonResult = JSON.parse ( request.responseText );
+
+                                        if ( jsonResult.message ) 
+                                        {
+                                            modalbox.displayModal ( 'progressDialog', 'Wystąpił błąd', '<p>Podczas przesyłania twojej piosenki wystąpił błąd!</p><p>Serwer pozostawił komentarz: ' + jsonResult.message + '</p>', 
+                                                [ 
+                                                    { id: 'progressDialogOk', message: 'Ok', handler: function ( ev ) { 
+                                                        modalbox.closeModal ( this );
+                                                    } }
+                                                ] 
+                                            );
+                                        }
+                                        else 
+                                        {
+                                            modalbox.displayModal ( 'progressDialog', 'Wystąpił błąd', '<p>Podczas przesyłania twojej piosenki wystąpił błąd!</p><p>Serwer nie pozostawił żadnego komentarza. Prosimy spróbować ponownie później.</p>', 
+                                                [ 
+                                                    { id: 'progressDialogOk', message: 'Ok', handler: function ( ev ) { 
+                                                        modalbox.closeModal ( this );
+                                                    } }
+                                                ] 
+                                            );
+                                        }
+                                    }
+                                    catch ( error )
+                                    {
+                                        modalbox.displayModal ( 'progressDialog', 'Wystąpił błąd', '<p>Podczas przesyłania twojej piosenki wystąpił błąd!</p><p>Wystąpił nieznany błąd po stronie klienta</p>', 
+                                            [ 
+                                                { id: 'progressDialogOk', message: 'Ok', handler: function ( ev ) { 
+                                                    modalbox.closeModal ( this );
+                                                } }
+                                            ] 
+                                        );
+                                    }
+
+                                    blackout.style.display = 'none';
+                                    isUploading = false;
+                                }
+                            }
+                        } );
+
+                        request.send ( formData );
+                    }
+                } );
+            } );
+        </script>
+    </head>
+    <body>
+        <div class="backgroundCover"></div>
+        <div class="bodyWrapper">
+            <div class="siteHeader">
+                <div class="siteHeaderWordmark">
+                    radio patapedia
+                </div>
+            </div>
+            <div class="siteMain">
+                <h1>Przesyłanie Pliku</h1>
+                <p>Plik musi być w formacie MP3. Inne formaty audio nie są obsługiwane. Wielokrotne przesyłanie niepoprawnych plików zakończy się automatyczną blokadą konta.</p>
+                <div class="userinfo">
+                    <img src="{{useravatar}}" alt="Avatar">
+                    <p>Przesyłasz plik jako</p>
+                    <p class="username"><span class="name">{{username}}</span><span class="discriminator">#{{discriminator}}</span></p>
+                </div>
+                <div class="uploadform">
+                    <div id="uploadBlackout" class="uploadBlackout" style="display:none">
+                        <img src="loading.gif" alt="Loading..." />
+                    </div>
+                    <form method="POST" action="process" id="uploadForm">
+                        <div class="audiofile">
+                            <span id="desc">Nie wybrano pliku</span>
+                            <input type="file" name="song" id="file" class="inputfile" accept="audio/mpeg" />
+                            <label for="file" id="uploadLabel">Wybierz plik</label>
+                            <input type="submit" value="Rozpocznij Przesyłanie" />
+                        </div>
+                    </form>
+                </div>
+                <div class="footer">
+                    <p>Strona i aplikacja stworzona przez rekjna. Tło ukradłem z deviantarta owoca.</p>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>

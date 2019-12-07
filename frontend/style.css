@@ -1,0 +1,147 @@
+@font-face {
+    font-family: rubik;
+    src: url(rubik.ttf);
+}
+
+@font-face {
+    font-family: rubikbold;
+    src: url(rubikbold.ttf);
+}
+
+body, html {
+    padding: 0; margin: 0;
+    font-family: rubik;
+    color: #efefef;
+}
+
+div.bodyWrapper {
+    width: 75%;
+    margin: auto;
+}
+
+div.bodyWrapper > div.siteHeader {
+    height: 200px;
+    font-size: 80px;
+    font-weight: 100;
+    line-height: 160px;
+    text-align: center;
+    font-family: rubikbold;
+    color: #523c7b;
+}
+
+div.bodyWrapper > div.siteMain {
+    background: #efefef;
+    color: #3a3a3a;
+    padding: 20px 30px;
+}
+
+div.backgroundCover {
+    width: 100vw;
+    height: 100vh;
+    position: fixed;
+    background: url('background.png') no-repeat fixed center;
+    background-size: cover;
+    filter: blur(8px);
+  }
+  
+  body {
+    background: #523c7b;
+  }
+  
+  div.bodyWrapper {
+    z-index: 99;
+    position: relative;
+  }
+
+  div.siteHeaderWordmark {
+    text-shadow:
+     -1px -1px 0 #d7caf8,  
+      1px -1px 0 #d7caf8,
+      -1px 1px 0 #d7caf8,
+       1px 1px 0 #d7caf8;
+  }
+
+a.button {
+    background: #523c7b;
+    text-decoration: none;
+    padding: 10px 15px;
+    color: #efefef;
+}
+
+.footer {
+    color: #686868;
+}
+
+div.userinfo {
+    background: #36393f;
+    color: rgb(220, 221, 222);
+    overflow: hidden;
+    padding: 20px;
+    border-radius: 70px;
+  }
+  
+  div.userinfo img {
+    float: left;
+    border-radius: 50%;
+    width: 90px;
+    margin-right: 30px;
+  }
+  
+  div.userinfo p.username {
+    font-size: 110%;
+    font-weight: bold;
+  }
+  
+  div.userinfo span.discriminator {
+    color: #a6a7a4;
+  }
+
+  .inputfile {
+	width: 0.1px;
+	height: 0.1px;
+	opacity: 0;
+	overflow: hidden;
+	position: absolute;
+	z-index: -1;
+}
+
+.inputfile + label, input[type=submit] {
+    background: #523c7b;
+    text-decoration: none;
+    padding: 10px 15px;
+    color: #efefef;
+    display: inline-block;
+    cursor: pointer;
+    border: 0px;
+    font-size: inherit;
+    font-family: inherit;
+}
+
+div.audiofile {
+    margin-top: 20px;
+    border: 5px solid #d7caf8;
+    padding: 20px 25px;
+}
+
+div.audiofile span {
+    margin-right: 50px;
+}
+
+div.uploadform {
+  position: relative;
+}
+
+div.uploadBlackout {
+  position: absolute;
+  width: 100%;
+  background:rgba(239,239,239,0.7);
+  z-index: 1000;
+  height: 100%;
+  overflow: hidden;
+  text-align: center;
+}
+
+div.uploadBlackout > img {
+  width: 65px;
+  margin-top: 10px;
+}
