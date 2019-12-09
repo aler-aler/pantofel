@@ -100,7 +100,7 @@ function getMimeType ( filepath )
 function createDefaultResponse ( request, response, requestData )
 {
 	let fullPath = './frontend' + requestData.path;
-	fullPath.replace ( /\.\./g, '' );
+	fullPath = fullPath.replace( /\.\.\//g, '' );
 	
 	if ( fs.existsSync ( fullPath ) && fs.lstatSync ( fullPath ).isDirectory ( ) )
 		fullPath = fullPath + 'index.html';
