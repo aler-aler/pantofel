@@ -141,7 +141,7 @@ Client.on ( 'ready', ( ) =>
 {
 	// client is ready
 	logger.log ( '[Info/automusic] logged in!' );
-	Client.user.setActivity ( 'Minecraft' );
+	Client.user.setActivity ( 'weeb shit', { type: 'LISTENING' } );
 	
 	playMusic ( );
 } );
@@ -183,15 +183,42 @@ Client.on ( 'message', ( message ) =>
 				dispatcher.end ( );
 			}
 		}
+        else
+        {
+            message.channel.send ( "Twój głos był już zarejestrowany." );
+        }
 	}
+    
+    else if ( message.content.startsWith ( '$cancelvote' ) )
+    {
+		let userid = message.author.id;
+		let onlineusers = globalVoiceChannel.members.size;
+		let required = Math.floor ( ( onlineusers - 1 ) / 2 );
 
-	if ( message.content.startsWith ( '$skip' ) && message.author.id === '276791868141076480' )
+		if ( voteSkipped [userid] )
+		{
+			voteSkips--;
+			message.channel.send ( "Wycofano twój głos **" + voteSkips + "/" + ( required + 1 ) + "**" );
+			voteSkipped [userid] = true;
+		}
+        else
+        {
+            message.channel.send ( "Nie głosowałeś za pominięciem tej piosenki." );
+        }
+    }
+	
+    else if ( message.content.startsWith ( '$lock' ) )
+    {
+	    message.channel.send ( "Nie będę wyłączał tej chujowej piosenki z demokratycznego głosowania." ); 
+    }
+
+	else if ( message.content.startsWith ( '$skip' ) && message.member.hasPermission( 'KICK_MEMBERS' ) )
 	{
 		dispatcher.end ( );
 		return;
 	}
 
-	if ( message.content.startsWith ( '$eval ' ) && message.author.id === '276791868141076480' )
+	else if ( message.content.startsWith ( '$eval ' ) && message.author.id === '276791868141076480' )
 	{
 		try
 		{
