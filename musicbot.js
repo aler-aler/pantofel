@@ -199,7 +199,7 @@ Client.on ( 'message', ( message ) =>
 		{
 			voteSkips--;
 			message.channel.send ( "Wycofano twój głos **" + voteSkips + "/" + ( required + 1 ) + "**" );
-			voteSkipped [userid] = true;
+			voteSkipped [userid] = false;
 		}
         else
         {
