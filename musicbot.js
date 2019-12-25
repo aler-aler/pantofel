@@ -286,7 +286,7 @@ Client.on ( 'message', ( message ) =>
 		return;
 	}
 
-	else if ( message.content.startsWith ( '$voterepeat' ) )
+	else if ( message.content.startsWith ( '$voterepeat' ) && !repeat )
 	{
 		let userid = message.author.id;
 		let onlineusers = globalVoiceChannel.members.size;
@@ -311,7 +311,7 @@ Client.on ( 'message', ( message ) =>
         }
 	}
 
-	else if ( message.content.startsWith ( '$repeat' ) && message.member.hasPermission ( 'KICK_MEMBERS' ) )
+	else if ( message.content.startsWith ( '$repeat' ) && message.member.hasPermission ( 'KICK_MEMBERS' ) && !repeat )
 	{
 		message.channel.send ( "Użytkownik **" + message.author.username + '** zarządził powtórzenie aktualnej piosenki po jej zakończeniu!' );
 		repeat = true;
