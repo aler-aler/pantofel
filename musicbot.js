@@ -12,8 +12,13 @@ let voteSkips = 0;
 let voteSkipped = { };
 let globalVoiceChannel = null;
 
+let currentSong = null;
 let songs = [];
 let songQueue = [];
+
+let repeat = false;
+let voteRepeats = 0;
+let votedRepeat = { };
 
 function shuffleArray ( array )
 {
@@ -90,9 +95,32 @@ function musicQueueGet ( )
 	return Array.from ( songQueue );
 }
 
+function getCurrentDispatcher ( )
+{
+	return dispatcher;
+}
+
+function getCurrentSong ( )
+{
+	return currentSong;
+}
+
+function getSongList ( )
+{
+	generateSongList ( );
+	return songs;
+}
+
 function playMusic ( )
 {
-	let song = getNextSong ( );
+	let song = null;
+
+	if ( repeat ) song = currentSong;
+	else song = getNextSong ( );
+
+	repeat = false;
+	voteRepeats = 0;
+	votedRepeat = { };
 
 	logger.log ( '[Sound/automusic] now playing: ' + song );
 
@@ -115,6 +143,8 @@ function playMusic ( )
 			} );
 
 			globalConnection = connection;
+
+			currentSong = song;
 			
 			dispatcher = connection.play ( './playlist/' + song, { passes: 3 } );
 			dispatcher.on ( 'error', function ( m ) { logger.error ( m ); } );
@@ -179,8 +209,10 @@ function formatResponse ( text )
 
 Client.on ( 'message', ( message ) => 
 {
+	if ( message.guild.id !== globalVoiceChannel.guild.id ) return;
+
 	// maintenance
-	if ( message.content.startsWith ( '$voteskip' ) )
+	if ( message.content.startsWith ( '$voteskip' ) || message.content.startsWith ( '$vs' ) )
 	{
 		let userid = message.author.id;
 		let onlineusers = globalVoiceChannel.members.size;
@@ -193,7 +225,7 @@ Client.on ( 'message', ( message ) =>
 
 			voteSkipped [userid] = true;
 
-			if ( voteSkips > Math.floor ( ( onlineusers - 1 ) / 2 ) )
+			if ( voteSkips > required )
 			{
 				message.channel.send ( "Głosem większości dostępnych piosenka została pominięta." );
 				dispatcher.end ( );
@@ -228,9 +260,62 @@ Client.on ( 'message', ( message ) =>
 	    message.channel.send ( "Nie będę wyłączał tej chujowej piosenki z demokratycznego głosowania." ); 
     }
 
-	else if ( message.content.startsWith ( '$skip' ) && message.member.hasPermission( 'KICK_MEMBERS' ) )
+	else if ( message.content.startsWith ( '$skip' ) && message.member.hasPermission ( 'KICK_MEMBERS' ) )
 	{
+		message.channel.send ( "Użytkownik **" + message.author.username + '** pominął piosenkę!' );
 		dispatcher.end ( );
+		return;
+	}
+
+	else if ( message.content.startsWith ( '$songname' ) )
+	{
+		let download = Config.server_url + 'songpreview?title=' + currentSong;
+		message.channel.send ( "Nazwa aktualnie odtwarzanego pliku mp3: **" + currentSong + '**\nAby pobrać plik udaj się tutaj: ' + download );
+		return;
+	}
+
+	else if ( message.content.startsWith ( '$queue' ) )
+	{
+		message.channel.send ( "W aktualnej kolejce pozostało **" + songQueue.length + '** piosenek' );
+		return;
+	}
+
+	else if ( message.content.startsWith ( '$voteremove' ) || message.content.startsWith ( '$votedelete' ) )
+	{
+		message.channel.send ( "chciałbyś xD" );
+		return;
+	}
+
+	else if ( message.content.startsWith ( '$voterepeat' ) )
+	{
+		let userid = message.author.id;
+		let onlineusers = globalVoiceChannel.members.size;
+		let required = Math.floor ( ( onlineusers - 1 ) / 2 );
+
+		if ( !votedRepeat [userid] )
+		{
+			voteRepeats++;
+			message.channel.send ( "Zarejestrowano twój glos **" + voteRepeats + "/" + ( required + 1 ) + "**" );
+
+			votedRepeat [userid] = true;
+
+			if ( voteRepeats > required )
+			{
+				message.channel.send ( "Głosem większości dostępnych piosenka zostanie powtórzona." );
+				repeat = true;
+			}
+		}
+        else
+        {
+            message.channel.send ( "Twój głos był już zarejestrowany." );
+        }
+	}
+
+	else if ( message.content.startsWith ( '$repeat' ) && message.member.hasPermission ( 'KICK_MEMBERS' ) )
+	{
+		message.channel.send ( "Użytkownik **" + message.author.username + '** zarządził powtórzenie aktualnej piosenki po jej zakończeniu!' );
+		repeat = true;
+
 		return;
 	}
 
@@ -275,3 +360,6 @@ module.exports.musicQueueInsert = musicQueueInsert;
 module.exports.musicQueuePop = musicQueuePop;
 module.exports.musicQueueRandomize = musicQueueRandomize;
 module.exports.musicQueueGet = musicQueueGet;
+module.exports.getCurrentDispatcher = getCurrentDispatcher;
+module.exports.getCurrentSong = getCurrentSong;
+module.exports.getSongList = getSongList;

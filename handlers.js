@@ -1,6 +1,7 @@
 const requestlib = require ( 'request' );
 const formidable = require ( 'formidable' );
 const util = require ( 'util' );
+const fs = require ( 'fs' );
 
 const Config = require ( './config.json' );
 const WebServer = require ( './index.js' );
@@ -31,6 +32,50 @@ function displayApiError ( request, response, code, message )
     response.write ( JSON.stringify ( { success: false, message: message } ) );
     response.end ( );
 }
+
+WebServer.registerRequestHandler ( '/songpreview', function ( request, response, requestData, cookies, session )
+{
+    if ( requestData.query && requestData.query.title )
+    {
+        let filename = new String ( requestData.query.title );
+        let fullPath = './playlist/' + filename;
+    
+        fullPath = fullPath.replace( /\.\.\//g, '' );
+
+        if ( fs.existsSync ( fullPath ) )
+        {
+		    let stat = fs.statSync ( fullPath );
+		
+		    response.writeHead ( 200, 
+		    { 
+			    'Content-Type': 'audio/mpeg',
+			    'Content-Length': stat.size
+		    } );
+
+		    let readStream = fs.createReadStream ( fullPath )
+		    readStream.pipe ( response );
+        }
+        else
+        {
+            response.writeHead ( 200, { 'Content-Type': 'application/json' } );
+            response.write ( JSON.stringify ( { 'error': true, 'message': 'not found' } ) );
+            response.end ( );
+        }
+    }
+    else 
+    {
+        WebServer.redirect ( request, response, '/' );
+    }
+} );
+
+WebServer.registerRequestHandler ( '/songlist', function ( request, response, requestData, cookies, session )
+{
+    let list = MusicBot.getSongList ( );
+
+    response.writeHead ( 200, { 'Content-Type': 'application/json' } );
+    response.write ( JSON.stringify ( { songs: list } ) );
+    response.end ( );
+} );
 
 WebServer.registerRequestHandler ( '/process', function ( request, response, requestData, cookies, session )
 {
@@ -167,19 +212,4 @@ WebServer.registerRequestHandler ( '/template_test', function ( request, respons
     } );
 
     response.end ( );
-} );
-
-WebServer.registerRequestHandler ( '/session_test', function ( request, response, requestData, cookies, session )
-{
-    if ( !session.variables.testRandomNumber ) session.variables.testRandomNumber = Math.floor ( Math.random ( ) * 2000 );
-
-    response.writeHead ( 200, { 'Content-Type': 'text/html' } );
-    response.write ( '<h1>Session Data</h1>' );
-    response.write ( '<p>Session ID: ' + session.id + '</p>' );
-    response.write ( '<p>Session Started: ' + session.started + '</p>' );
-    response.write ( '<p>Session Expires: ' + session.expires + '</p>' );
-    response.write ( '<p>Lifetime Remaining: ' + ( session.expires - Date.now ( ) ) + '</p>' );
-    response.write ( '<p>Secret Number: ' + session.variables.testRandomNumber + '</p>' );
-    response.write ( '<p>Variables: ' + JSON.stringify ( session.variables ) + '</p>' )
-	response.end ( );
 } );
