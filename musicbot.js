@@ -72,6 +72,19 @@ function generateSongList ( )
 	} );
 }
 
+function getRandomAnnouncer ( )
+{
+	let announcerMessages = [ ];
+
+	fs.readdirSync ( './announcer' ).forEach ( function ( file )
+	{
+		announcerMessages.push ( file );
+	} );
+
+	let rng = Math.floor ( Math.random ( ) * announcerMessages.length );
+	return announcerMessages [rng];
+}
+
 function musicQueueGet ( )
 {
 	return Array.from ( songQueue );
@@ -110,7 +123,10 @@ function playMusic ( )
 			{
 				setTimeout ( function ( )
 				{
-					let announcer = connection.play ( './announcer.mp3', { passes: 3 } );
+					let announcerFile = getRandomAnnouncer ( );
+					logger.log ( '[Info/automusic] selecting random announcer message: ' + announcerFile );
+
+					let announcer = connection.play ( './announcer/' + announcerFile, { passes: 3 } );
 					announcer.on ( 'error', function ( m ) { logger.error ( m ); } );
 
 					logger.log ( '[Info/automusic] playing announcer' );
