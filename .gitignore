@@ -97,6 +97,7 @@ public/
 
 # custom - bot directories and token configuration
 announcer.mp3
+announcer/
 reexported/
 playlist/
 ssl/
