@@ -75,6 +75,7 @@ registerCommand ( 'eval', function ( message, args, raw )
 
 Client.on ( 'message', ( message ) => 
 {
+	if ( !message.guild ) return;
 	if ( message.guild.id !== guildID ) return;
 	if ( !message.content.startsWith ( Config.prefix ) ) return;
 
