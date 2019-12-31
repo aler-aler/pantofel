@@ -1,0 +1,20 @@
+body {
+	background: #523c7b;
+}
+
+div.siteHeaderWordmark {
+	text-shadow: -1px -1px 0 #d7caf8, 1px -1px 0 #d7caf8, -1px 1px 0 #d7caf8, 1px 1px 0 #d7caf8;
+}
+
+a.button {
+	background: #523c7b;
+}
+
+.inputfile+label,
+input[type=submit] {
+	background: #523c7b;
+}
+
+div.bodyWrapper>div.siteHeader {
+	color: #523c7b;
+}

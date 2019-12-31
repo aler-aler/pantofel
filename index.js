@@ -214,6 +214,7 @@ const server = https.createServer ( options, function ( request, response )
 module.exports.registerRequestHandler = registerRequestHandler;
 module.exports.redirect = redirectRequest;
 module.exports.renderTemplate = renderTemplate;
+module.exports.getMimeType = getMimeType;
 
 require ( './handlers.js' );
 

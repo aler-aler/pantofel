@@ -200,6 +200,59 @@ WebServer.registerRequestHandler ( '/auth', function ( request, response, reques
     }
 } );
 
+WebServer.registerRequestHandler ( '/get_asset', function ( request, response, requestData, cookies, session )
+{
+    let skin = './assets/default';
+    let cookieSkin = cookies.get ( 'skin_id' );
+
+    if ( !cookieSkin )
+    {
+        cookieSkin = Config.enabled_skins [Math.floor ( Math.random ( ) * Config.enabled_skins.length )];
+        cookies.set ( 'skin_id', cookieSkin, { expires: new Date ( Date.now ( ) + 5 * 60 * 1000 ) } );
+
+        logger.log ( '[Info/WebServer] random skin selected: ' + cookieSkin );
+    }
+
+    cookieSkin = String ( cookieSkin );
+    cookieSkin = cookieSkin.replace ( /[^a-zA-Z0-9-_]+/ig, '' );
+    cookieSkin = './assets/' + cookieSkin;
+
+    if ( cookieSkin && fs.existsSync ( cookieSkin ) && fs.lstatSync ( cookieSkin ).isDirectory ( ) )
+        skin = cookieSkin;
+
+    if ( requestData.query.name )
+    {
+        let resourceName = requestData.query.name.replace ( /[^a-zA-Z0-9-_\.]+/, '' );
+        let fullPath = skin + '/' + resourceName;
+
+        if ( fs.existsSync ( fullPath ) )
+        {
+            let mimeType = WebServer.getMimeType ( fullPath );
+            let stat = fs.statSync ( fullPath );
+
+            response.writeHead ( 200, 
+            { 
+                'Content-Type': mimeType,
+                'Content-Length': stat.size
+            } );
+    
+            let readStream = fs.createReadStream ( fullPath )
+            readStream.pipe ( response );
+        }
+        else
+        {
+            response.writeHead ( 404, { 'Content-Type': 'text/html' } );
+            response.write ( '<h1>Not Found</h1>' );
+            response.end ( );
+        }
+    }
+    else
+    {
+        response.writeHead ( 200, { 'Content-Type': 'text/html' } );
+        response.end ( );
+    }
+} );
+
 WebServer.registerRequestHandler ( '/template_test', function ( request, response, requestData, cookies, session )
 {
     response.writeHead ( 200, { 'Content-Type': 'text/html' } );
