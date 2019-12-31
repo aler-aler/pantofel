@@ -9,7 +9,7 @@ const WebServer = require ( './index.js' );
 const fileutil = require ( './fileutil.js' );
 const logger = require ( './logger.js' );
 
-const MusicBot = require ( './musicbot.js' );
+const MusicPlayer = require ( './musicplayer.js' );
 
 function verifyUserCredentials ( access_token, token_type, success, failure )
 {
@@ -70,7 +70,7 @@ WebServer.registerRequestHandler ( '/songpreview', function ( request, response,
 
 WebServer.registerRequestHandler ( '/songlist', function ( request, response, requestData, cookies, session )
 {
-    let list = MusicBot.getSongList ( );
+    let list = MusicPlayer.getSongList ( );
 
     response.writeHead ( 200, { 'Content-Type': 'application/json' } );
     response.write ( JSON.stringify ( { songs: list } ) );
@@ -107,7 +107,7 @@ WebServer.registerRequestHandler ( '/process', function ( request, response, req
             let path = files.song.path;
             fileutil.handleUploadedFile ( path, function ( songname )
             {
-                MusicBot.musicQueueInsert ( songname + '.mp3' );
+                MusicPlayer.musicQueueInsert ( songname + '.mp3' );
 
                 // success
                 response.writeHead ( 200, { 'Content-Type': 'application/json' } );
