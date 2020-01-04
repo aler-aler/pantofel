@@ -162,6 +162,8 @@ function playMusic ( Client )
 					if ( forcePlay ) announcer = connection.play ( forcePlayPath, { passes: 3 } );
 					else announcer = connection.play ( './announcer/' + announcerFile, { passes: 3 } );
 
+					forcePlay = false;
+
 					announcer.on ( 'error', function ( m ) { logger.error ( m ); } );
 
 					logger.log ( '[Info/automusic] playing announcer' );
