@@ -1,0 +1,30 @@
+{
+	"token": "",
+	"channel_id": "",
+
+	"client_id": "",
+	"client_secret": "",
+
+	"session_duration": 3600000,
+	"auth_required": true,
+	"probe_command": "ffprobe -v error -print_format json -show_format -show_streams ",
+
+	"server_url": "https://localhost:3000/",
+	"prefix": "$",
+	"owners": [ "" ],
+
+	"enabled_skins": [ "default", "luckystar", "bababaan" ],
+
+	"https":
+	{
+		"key": "./ssl/key.pem",
+		"cert": "./ssl/cert.pem"
+	},
+
+	"discord_auth":
+	{
+		"redirect_uri": "https://localhost:3000/auth",
+		"token_url": "https://discordapp.com/api/oauth2/token",
+		"redirect": ""
+	}
+}
