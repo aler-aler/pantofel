@@ -20,15 +20,18 @@ module.exports.registerCommand = registerCommand;
 
 const MusicPlayer = require ( './musicplayer.js' );
 
-Client.on ( 'ready', ( ) => 
+Client.on ( 'ready', ( ) =>
 {
 	// client is ready
 	logger.log ( '[Info/automusic] logged in!' );
 	Client.user.setActivity ( 'weeb shit', { type: 'LISTENING' } );
 
-	guildID = Client.channels.get ( Config.channel_id ).guild.id;
-	
-	MusicPlayer.playMusic ( Client );
+    ///////////////////////
+    // bruh moment
+    ///////////////////////
+	guildID = Client.channels.cache.get ( Config.channel_id ).guild.id;
+
+	MusicPlayer.init ( Client );
 } );
 
 Client.on ( 'warning', function ( m ) { logger.warn ( m ); } )
@@ -61,19 +64,19 @@ registerCommand ( 'eval', function ( message, args, raw )
 		let payload = raw.substring ( 6, message.content.length );
 		let output = true;
 		let result = eval ( payload );
-		
+
 		if ( output )
 			message.channel.send ( formatResponse ( result ), { code: 'xl' } );
-	} 
+	}
 	catch ( error )
 	{
 		message.channel.send ( '```' + formatResponse ( error ) + '```' );
 	}
-	
+
 	return;
 } );
 
-Client.on ( 'message', ( message ) => 
+Client.on ( 'message', ( message ) =>
 {
 	if ( !message.guild ) return;
 	if ( message.guild.id !== guildID ) return;

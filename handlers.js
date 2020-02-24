@@ -5,11 +5,28 @@ const fs = require ( 'fs' );
 
 const Config = require ( './config.json' );
 const WebServer = require ( './index.js' );
+const Metadata = require ( 'node-id3' );
 
 const fileutil = require ( './fileutil.js' );
 const logger = require ( './logger.js' );
 
 const MusicPlayer = require ( './musicplayer.js' );
+
+const genres = require( './genres.json' );
+
+let verySadDatabase = {};
+
+fs.readdirSync ( './playlist' ).forEach ( function ( file )
+{
+    Metadata.read ( `./playlist/${file}`, function ( err, tags ) {
+        verySadDatabase[file] = {
+            artist: tags.artist ? tags.artist : '',
+            title: tags.title ? tags.title : '',
+            album: tags.album ? tags.album : '',
+            genre: tags.raw && tags.raw.TCON ? parseInt(tags.raw.TCON.substr(1)) : 12
+        }
+    } );
+} );
 
 function verifyUserCredentials ( access_token, token_type, success, failure )
 {
@@ -18,7 +35,7 @@ function verifyUserCredentials ( access_token, token_type, success, failure )
         headers: { authorization: token_type + ' ' + access_token }
     }, function ( error, res, body )
     {
-        if ( !error ) 
+        if ( !error )
         {
             success ( JSON.parse ( body ) );
         }
@@ -33,21 +50,49 @@ function displayApiError ( request, response, code, message )
     response.end ( );
 }
 
+WebServer.registerRequestHandler ( '/cover.png', function ( request, response, requestData, cookies, session )
+{
+    response.writeHead ( 200, { 'Content-Type': 'image/png' } );
+    response.write ( )
+    response.end ( );
+} );
+
+WebServer.registerRequestHandler ( '/', function ( request, response, requestData, cookies, session )
+{
+    response.writeHead ( 200, { 'Content-Type': 'text/html' } );
+    if ( session.variables.discordAuth )
+    {
+        let userdata = session.variables.discordAuth.userdata;
+
+        WebServer.renderTemplate ( 'index-logged', request, response,
+        {
+            username: userdata.username,
+            useravatar: 'https://cdn.discordapp.com/avatars/' + userdata.id + '/' + userdata.avatar + '.png',
+            discriminator: userdata.discriminator
+        } );
+    }
+    else
+    {
+        WebServer.renderTemplate ( 'index', request, response, {} );
+    }
+    response.end ( );
+} );
+
 WebServer.registerRequestHandler ( '/songpreview', function ( request, response, requestData, cookies, session )
 {
     if ( requestData.query && requestData.query.title )
     {
         let filename = new String ( requestData.query.title );
         let fullPath = './playlist/' + filename;
-    
+
         fullPath = fullPath.replace( /\.\.\//g, '' );
 
         if ( fs.existsSync ( fullPath ) )
         {
 		    let stat = fs.statSync ( fullPath );
-		
-		    response.writeHead ( 200, 
-		    { 
+
+		    response.writeHead ( 200,
+		    {
 			    'Content-Type': 'audio/mpeg',
 			    'Content-Length': stat.size
 		    } );
@@ -62,7 +107,7 @@ WebServer.registerRequestHandler ( '/songpreview', function ( request, response,
             response.end ( );
         }
     }
-    else 
+    else
     {
         WebServer.redirect ( request, response, '/' );
     }
@@ -75,6 +120,50 @@ WebServer.registerRequestHandler ( '/songlist', function ( request, response, re
     response.writeHead ( 200, { 'Content-Type': 'application/json' } );
     response.write ( JSON.stringify ( { songs: list } ) );
     response.end ( );
+} );
+
+WebServer.registerRequestHandler ( '/id3', function ( request, response, requestData, cookies, session )
+{
+    if ( request.method.toLowerCase ( ) == 'post' )
+    {
+        if ( !session.variables.discordAuth && Config.auth_required )
+        {
+            displayApiError ( request, response, 403, 'authentication required' );
+            return;
+        }
+
+        let form = new formidable.IncomingForm ( );
+
+        form.parse ( request, function ( error, fields, files )
+        {
+            let songname = fields.songname;
+            fields.songname = null;
+            fields.TCON = `(${fields.TCON})`;
+            let success = Metadata.write(fields, `./playlist/${songname}`);
+
+            verySadDatabase [ songname ] = {
+                artist: fields.artist,
+                title: fields.title,
+                album: fields.album,
+                genre: fields.TCON
+            }
+
+            if ( success )
+            {
+                response.writeHead ( 200, { 'Content-Type': 'application/json' } );
+                response.write ( JSON.stringify ( { success: true, message: 'upload complete' } ) );
+                response.end ( );
+            }
+            else
+            {
+                response.writeHead ( 400, { 'Content-Type': 'application/json' } );
+                response.write ( JSON.stringify ( { success: false, message: 'invalid file' } ) );
+                response.end ( );
+            }
+            if ( error ) return displayApiError ( request, response, 400, 'invalid request' );
+        } );
+    }
+    else displayApiError ( request, response, 405, 'method not allowed' );
 } );
 
 WebServer.registerRequestHandler ( '/process', function ( request, response, requestData, cookies, session )
@@ -109,6 +198,15 @@ WebServer.registerRequestHandler ( '/process', function ( request, response, req
             {
                 MusicPlayer.musicQueueInsert ( songname + '.mp3' );
 
+                Metadata.read ( `./playlist/${songname}.mp3`, function ( err, tags ) {
+                    verySadDatabase[`${songname}.mp3`] = {
+                        artist: tags.artist ? tags.artist : '',
+                        title: tags.title ? tags.title : '',
+                        album: tags.album ? tags.album : '',
+                        genre: tags.raw && tags.raw.TCON ? parseInt(tags.raw.TCON.substr(1)) : 12
+                    }
+                } );
+
                 // success
                 response.writeHead ( 200, { 'Content-Type': 'application/json' } );
                 response.write ( JSON.stringify ( { success: true, message: 'upload complete' } ) );
@@ -122,15 +220,15 @@ WebServer.registerRequestHandler ( '/process', function ( request, response, req
     else displayApiError ( request, response, 405, 'method not allowed' );
 } );
 
-WebServer.registerRequestHandler ( '/upload', function ( request, response, requestData, cookies, session ) 
+WebServer.registerRequestHandler ( '/upload', function ( request, response, requestData, cookies, session )
 {
     if ( session.variables.discordAuth )
     {
         response.writeHead ( 200, { 'Content-Type': 'text/html' } );
         let userdata = session.variables.discordAuth.userdata;
 
-        WebServer.renderTemplate ( 'uploadform', request, response, 
-        {  
+        WebServer.renderTemplate ( 'uploadform', request, response,
+        {
             username: userdata.username,
             useravatar: 'https://cdn.discordapp.com/avatars/' + userdata.id + '/' + userdata.avatar + '.png',
             discriminator: userdata.discriminator
@@ -144,6 +242,53 @@ WebServer.registerRequestHandler ( '/upload', function ( request, response, requ
     }
 } );
 
+WebServer.registerRequestHandler ( '/song', function ( request, response, requestData, cookies, session )
+{
+    if ( session.variables.discordAuth && requestData.query && requestData.query.title )
+    {
+        let filename = new String ( requestData.query.title );
+        let fullPath = `./playlist/${filename}`;
+
+        fullPath = fullPath.replace( /\.\.\//g, '' );
+
+        if ( fs.existsSync ( fullPath ) )
+        {
+		    let stat = fs.statSync ( fullPath );
+
+            response.writeHead ( 200, { 'Content-Type': 'text/html' } );
+            // let userdata = {username: 'aler', discriminator: 'rzer', avatar: 'nie'};
+            let userdata = session.variables.discordAuth.userdata;
+
+            let tags = verySadDatabase [ filename ];
+            let genrelist = '<option value=12">Other</option>';
+            for(key in genres) {
+                genrelist += `<option value="${key}"${tags.genre == key ? ' selected' : ''}>${genres[key].name}</option>`;
+            }
+            WebServer.renderTemplate ( 'songedit', request, response,
+            {
+                songauthor: tags.artist ? tags.artist : '',
+                songname: tags.title ? tags.title : '',
+                songalbum: tags.album ? tags.album : '',
+                genrelist: genrelist,
+                username: userdata.username,
+                useravatar: 'https://cdn.discordapp.com/avatars/' + userdata.id + '/' + userdata.avatar + '.png',
+                discriminator: userdata.discriminator,
+                song: requestData.query.title
+            } );
+
+            response.end();
+        }
+        else
+        {
+            WebServer.redirect ( request, response, '/' );
+        }
+    }
+    else
+    {
+        WebServer.redirect ( request, response, '/' );
+    }
+} );
+
 WebServer.registerRequestHandler ( '/auth', function ( request, response, requestData, cookies, session )
 {
     if ( session.variables.discordAuth ) return WebServer.redirect ( request, response, '/upload' );
@@ -152,10 +297,10 @@ WebServer.registerRequestHandler ( '/auth', function ( request, response, reques
     {
         let code = requestData.query.code;
 
-        requestlib.post ( { 
+        requestlib.post ( {
             url: 'https://discordapp.com/api/oauth2/token',
-            form: 
-            {  
+            form:
+            {
                 client_id: Config.client_id,
                 client_secret: Config.client_secret,
                 grant_type: 'authorization_code',
@@ -188,7 +333,7 @@ WebServer.registerRequestHandler ( '/auth', function ( request, response, reques
                         response.end ( );
                     } );
                 }
-                else return WebServer.redirect ( request, response, '/' );             
+                else return WebServer.redirect ( request, response, '/' );
             }
             else throw new Error ( error );
         } );
@@ -230,12 +375,12 @@ WebServer.registerRequestHandler ( '/get_asset', function ( request, response, r
             let mimeType = WebServer.getMimeType ( fullPath );
             let stat = fs.statSync ( fullPath );
 
-            response.writeHead ( 200, 
-            { 
+            response.writeHead ( 200,
+            {
                 'Content-Type': mimeType,
                 'Content-Length': stat.size
             } );
-    
+
             let readStream = fs.createReadStream ( fullPath )
             readStream.pipe ( response );
         }
@@ -257,8 +402,8 @@ WebServer.registerRequestHandler ( '/template_test', function ( request, respons
 {
     response.writeHead ( 200, { 'Content-Type': 'text/html' } );
 
-    WebServer.renderTemplate ( 'uploadform', request, response, 
-    {  
+    WebServer.renderTemplate ( 'uploadform', request, response,
+    {
         username: 'huj',
         useravatar: 'https://cdn.discordapp.com/avatars/276791868141076480/4a3736a3aa445bec61dde599040d0ec7.png',
         discriminator: '6969'

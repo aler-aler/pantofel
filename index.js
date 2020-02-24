@@ -38,14 +38,34 @@ let requestHandlers = { };
 
 function renderTemplate ( template, request, response, data )
 {
-	let filepath = './templates/' + template + '.html';
+	let filepath = `./templates/${template}.html`;
 
 	if ( fs.existsSync ( filepath ) )
 	{
 		let buffer = fs.readFileSync ( filepath ).toString ( );
 
+		// Other templates
+		let start;
+		let current = 0;
+		while( (start = buffer.indexOf ( '{{', current )) !== -1 )
+		{
+			let end = buffer.indexOf ( '}}', current );
+			if( end === -1 )
+				break;
+			current = end + 1;
+			let key = buffer.substr(start + 2, end - start - 2);
+			filepath = `./templates/${key}.html`;
+			if ( fs.existsSync ( filepath ) )
+			{
+				current = 0;
+				let data = fs.readFileSync ( filepath ).toString ( );
+				buffer = buffer.replace ( new RegExp ( `{{${key}}}`, 'g' ), data );
+			}
+		}
+
+		// Variables
 		for ( let key in data )
-			buffer = buffer.replace ( new RegExp ( '{{' + key + '}}', 'g' ), data [key] );
+			buffer = buffer.replace ( new RegExp ( `{{${key}}}`, 'g' ), data [key] );
 
 		response.write ( buffer );
 	}
@@ -53,7 +73,7 @@ function renderTemplate ( template, request, response, data )
 
 function redirectRequest ( request, response, url )
 {
-	response.writeHead ( 302, { 
+	response.writeHead ( 302, {
 		'Location': url
 	} );
 
@@ -72,7 +92,7 @@ function registerRequestHandler ( path, handler )
 		requestHandlers [path] = handler;
 		return true;
 	}
-	
+
 	return false;
 }
 
@@ -101,7 +121,7 @@ function createDefaultResponse ( request, response, requestData )
 {
 	let fullPath = './frontend' + requestData.path;
 	fullPath = fullPath.replace( /\.\.\//g, '' );
-	
+
 	if ( fs.existsSync ( fullPath ) && fs.lstatSync ( fullPath ).isDirectory ( ) )
 		fullPath = fullPath + 'index.html';
 
@@ -109,9 +129,9 @@ function createDefaultResponse ( request, response, requestData )
 	{
 		let mimeType = getMimeType ( fullPath );
 		let stat = fs.statSync ( fullPath );
-		
-		response.writeHead ( 200, 
-		{ 
+
+		response.writeHead ( 200,
+		{
 			'Content-Type': mimeType,
 			'Content-Length': stat.size
 		} );
@@ -122,7 +142,7 @@ function createDefaultResponse ( request, response, requestData )
 	else
 	{
 		logger.log ( '[Info/WebServer] Outgoing Rsponse 404. File: ' + fullPath );
-			
+
 		// display error page
 		response.writeHead ( 404, { 'Content-Type': 'text/html' } );
 		response.write ( '<h1>Not Found</h1>' );
@@ -162,7 +182,7 @@ function getRequestSession ( request, requestData, cookies )
 			return sessions [sessionID];
 		}
 	}
-	
+
 	sessionID = crypto.randomBytes ( 12 ).toString ( 'base64' );
 	let newSession = { };
 
@@ -188,17 +208,17 @@ const server = https.createServer ( options, function ( request, response )
 
 	logger.log ( '[Info/WebServer] Incomming Request ' + requestData.path + ' from ' + requestData.ip );
 
-	if ( requestHandlers [requestData.path] ) 
+	if ( requestHandlers [requestData.path] )
 	{
 		try
 		{
 			requestHandlers [requestData.path] ( request, response, requestData, cookies, session );
-		} 
+		}
 		catch ( error )
 		{
 			logger.log ( '[Info/WebServer] Outgoing Rsponse 500' );
 			logger.error ( error );
-			
+
 			// display error page
 			response.writeHead ( 500, { 'Content-Type': 'text/html' } );
 			response.write ( '<h1>Internal Server Error</h1>' );
@@ -220,10 +240,10 @@ require ( './handlers.js' );
 
 function runMusicBot ( )
 {
-	try 
+	try
 	{
 		MusicBot.run ( );
-	} 
+	}
 	catch ( error )
 	{
 		logger.error ( error );
