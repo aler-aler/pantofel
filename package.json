@@ -1,6 +1,6 @@
 {
   "name": "pantofel",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "radjo",
   "main": "src/run.js",
   "scripts": {
@@ -16,7 +16,6 @@
     "filereader": "^0.10.3",
     "formidable": "^1.2.1",
     "mp3-duration": "^1.1.0",
-    "music-metadata": "^6.3.4",
     "node-id3": "^0.1.13",
     "node-opus": "^0.3.3",
     "request": "^2.88.0"
