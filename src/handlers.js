@@ -168,6 +168,7 @@ WebServer.registerRequestHandler ( '/id3', function ( request, response, request
 
         form.parse ( request, function ( error, fields, files )
         {
+			console.log(files);
             let songname = fields.songname;
             fields.songname = null;
 			
@@ -192,8 +193,11 @@ WebServer.registerRequestHandler ( '/id3', function ( request, response, request
 				if ( error ) return displayApiError ( request, response, 400, 'invalid request' );
 			};
 			
-			if(files.image) {
+			if(files.image && files.image.size > 0) {
 				let fr = new FileReader();
+				fr.onerror = function onerror ( ev ) {
+					reply();
+				}
 				fr.onload = function onload ( ev ) {
 					Database.setImage ( songname, ev.target.result );
 					reply();
@@ -243,7 +247,7 @@ WebServer.registerRequestHandler ( '/process', function ( request, response, req
 
                 // success
                 response.writeHead ( 200, { 'Content-Type': 'application/json' } );
-                response.write ( JSON.stringify ( { success: true, message: 'upload complete' } ) );
+                response.write ( JSON.stringify ( { success: true, message: 'upload complete', songname: `${songname}.mp3` } ) );
                 response.end ( );
             }, function ( )
             {

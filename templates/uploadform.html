@@ -43,10 +43,12 @@
                             {
                                 if ( request.status == 200 )
                                 {
+									let jsonResult = JSON.parse ( request.responseText );
+									
                                     modalbox.displayModal ( 'progressDialog', 'Przesyłanie zakończone', '<p>Twoja piosenka została dodana do puli. Niedługo powinna pojawić się na czacie głosowym ♪</p>',
                                         [
                                             { id: 'progressDialogOk', message: 'Ok', handler: function ( ev ) {
-                                                window.location.href = `/song?title=1.mp3`;
+                                                window.location.href = `/song?title=${jsonResult.songname}`;
                                             } }
                                         ]
                                     );
