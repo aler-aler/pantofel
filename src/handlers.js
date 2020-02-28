@@ -168,7 +168,6 @@ WebServer.registerRequestHandler ( '/id3', function ( request, response, request
 
         form.parse ( request, function ( error, fields, files )
         {
-			console.log(files);
             let songname = fields.songname;
             fields.songname = null;
 			
