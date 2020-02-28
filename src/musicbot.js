@@ -23,22 +23,19 @@ const MusicPlayer = require ( './musicplayer.js' );
 Client.on ( 'ready', ( ) =>
 {
     // client is ready
-    logger.log ( '[Info/automusic] logged in!' );
+    logger.log ( 'Client', 'Logged in!' );
     Client.user.setActivity ( 'weeb shit', { type: 'LISTENING' } );
 
-    ///////////////////////
-    // bruh moment
-    ///////////////////////
     guildID = Client.channels.cache.get ( Config.channel_id ).guild.id;
 
     MusicPlayer.init ( Client );
 } );
 
-Client.on ( 'warning', function ( m ) { logger.warn ( m ); } )
-    .on ( 'error', function ( m ) { logger.error ( m ); } )
+Client.on ( 'warning', function ( m ) { logger.warn ( 'Client', m ); } )
+    .on ( 'error', function ( m ) { logger.error ( 'Client', m ); } )
 
     .on ( 'disconnect', ( ) => {
-        logger.warn ( '[Info/automusic] disconnected!' );
+        logger.warn ( 'Client', 'disconnected!' );
     } );
 
 function formatResponse ( text )
@@ -106,17 +103,17 @@ Client.on ( 'message', ( message ) =>
 
 Client.on ( 'disconnect', function ( )
 {
-    logger.error ( '[Error/musicbot] disconnected. bot will try to reconnect soon (10 seconds)' );
+    logger.error ( 'MusicBot', 'Disconnected. Will try to reconnect soon (10 seconds)' );
 
     setTimeout ( function ( )
     {
-        logger.log ( '[Info/musicbot] reconnecting' );
+        logger.log ( 'MusicBot', 'Reconnecting' );
         Client.login ( Config.token );
     }, 10000 );
 } );
 
 module.exports.run = function ( )
 {
-    logger.log ( '[Info/musicbot] initializing bot account' );
+    logger.log ( 'MusicBot', 'Initializing bot account' );
     Client.login ( Config.token );
 }

@@ -87,7 +87,7 @@ function registerRequestHandler ( path, handler )
 
     if ( !requestHandlers [path] )
     {
-        logger.log ( '[Info/WebServer] Registered request handler for ' + path );
+        logger.log ( 'WebServer', `Registered request handler for ${path}` );
 
         requestHandlers [path] = handler;
         return true;
@@ -141,7 +141,7 @@ function createDefaultResponse ( request, response, requestData )
     }
     else
     {
-        logger.log ( '[Info/WebServer] Outgoing Rsponse 404. File: ' + fullPath );
+        logger.warn ( 'WebServer', `Outgoing Rsponse 404. File: ${fullPath}` );
 
         // display error page
         response.writeHead ( 404, { 'Content-Type': 'text/html' } );
@@ -154,13 +154,13 @@ let sessions = { };
 
 function terminateSession ( sessionID )
 {
-    logger.log ( '[Info/WebServer] Terminating session ' + sessionID );
+    logger.log ( 'WebServer', `Terminating session ${sessionID}` );
     delete sessions [sessionID];
 }
 
 function renewSession ( sessionID, cookies )
 {
-    logger.log ( '[Info/WebServer] Renewing session ' + sessionID );
+    logger.log ( 'WebServer', `Renewing session ${sessionID}` );
 
     clearTimeout ( sessions [sessionID].timeout );
 
@@ -196,7 +196,7 @@ function getRequestSession ( request, requestData, cookies )
 
     sessions [sessionID] = newSession;
 
-    logger.log ( '[Info/WebServer] Starting new session ' + sessionID );
+    logger.log ( 'WebServer', `Starting new session ${sessionID}` );
     return sessions [sessionID];
 }
 
@@ -206,18 +206,18 @@ const server = https.createServer ( options, function ( request, response )
     let cookies = Cookies ( request, response );
     let session = getRequestSession ( request, response, cookies );
 
-    logger.log ( '[Info/WebServer] Incoming Request ' + requestData.path + ' from ' + requestData.ip );
+    logger.log ( 'WebServer', `Incoming Request ${requestData.path} from ${requestData.ip}` );
 
-    if ( requestHandlers [requestData.path] )
+    if ( requestHandlers [ requestData.path ] )
     {
         try
         {
-            requestHandlers [requestData.path] ( request, response, requestData, cookies, session );
+            requestHandlers [ requestData.path ] ( request, response, requestData, cookies, session );
         }
         catch ( error )
         {
-            logger.log ( '[Info/WebServer] Outgoing Rsponse 500' );
-            logger.error ( error );
+            logger.error ( 'WebServer', 'Outgoing Rsponse 500' );
+            logger.error ( 'WebServer', error );
 
             // display error page
             response.writeHead ( 500, { 'Content-Type': 'text/html' } );
@@ -246,7 +246,7 @@ function runMusicBot ( )
     }
     catch ( error )
     {
-        logger.error ( error );
+        logger.error ( 'MusicBot', error );
         setTimeout ( function ( ) { runMusicBot ( ); }, 500 );
     }
 }

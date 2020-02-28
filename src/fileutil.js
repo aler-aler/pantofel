@@ -23,7 +23,7 @@ function handleUploadedFile ( filename, callback, error )
                 let name = crypto.randomBytes ( 12 ).toString ( 'hex' );
 
                 fs.renameSync ( filename, `./playlist/${ name }.mp3` );
-                logger.log ( '[Info/WebServer] Added new music ' + name );
+                logger.log ( 'WebServer', `Added new music: ${name}` );
                 return callback ( name );
             }
             else 
@@ -34,7 +34,7 @@ function handleUploadedFile ( filename, callback, error )
         {
             fs.unlinkSync ( filename );
 
-            logger.error ( exception );
+            logger.error ( 'WebServer', exception );
             error ( exception );
         }
     } );

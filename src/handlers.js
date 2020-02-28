@@ -79,7 +79,7 @@ WebServer.registerRequestHandler ( '/', function ( request, response, requestDat
         WebServer.renderTemplate ( 'index-logged', request, response,
         {
             username: userdata.username,
-            useravatar: 'https://cdn.discordapp.com/avatars/' + userdata.id + '/' + userdata.avatar + '.png',
+            useravatar: `https://cdn.discordapp.com/avatars/${userdata.id}/${userdata.avatar}.png`,
             discriminator: userdata.discriminator
         } );
     }
@@ -177,9 +177,11 @@ WebServer.registerRequestHandler ( '/id3', function ( request, response, request
             Database.setGenre ( songname, fields.genre );
             
             function reply ( ) 
-			{
+            {
                 if ( Database.write ( songname ) )
                 {
+                    if ( session.variables.discordAuth )
+                        logger.log ( 'WebServer', `User ${session.variables.discordAuth.userdata.username} has updated ${songname}.` );
                     response.writeHead ( 200, { 'Content-Type': 'application/json' } );
                     response.write ( JSON.stringify ( { success: true, message: 'upload complete' } ) );
                     response.end ( );
@@ -187,41 +189,41 @@ WebServer.registerRequestHandler ( '/id3', function ( request, response, request
                 else
                 {
                     response.writeHead ( 400, { 'Content-Type': 'application/json' } );
-					response.write ( JSON.stringify ( { success: false, message: 'fatal error' } ) );
-					response.end ( );
+                    response.write ( JSON.stringify ( { success: false, message: 'fatal error' } ) );
+                    response.end ( );
                 }
                 if ( error ) return displayApiError ( request, response, 400, 'invalid request' );
             };
             
             if ( files.image && files.image.size > 0 ) 
-			{
-				let fr = new FileReader ( ) ;
-				fr.onerror = function onerror ( ev ) 
-				{
-					response.writeHead ( 400, { 'Content-Type': 'application/json' } );
-					response.write ( JSON.stringify ( { success: false, message: 'invalid file' } ) );
-					response.end ( );
-				}
-				fr.onload = function onload ( ev ) 
-				{
-					let buff = ev.target.result;
-					if ( buff [ 0 ] === 0xFF && buff [ 1 ] === 0xD8
-					&& buff [ buff.length - 2 ] === 0xFF && buff [ buff.length - 1 ] === 0xD9 )
-					{
-						Database.setImage ( songname, buff );
-						reply ( );
-					}
-					else
-					{
-						response.writeHead ( 400, { 'Content-Type': 'application/json' } );
-						response.write ( JSON.stringify ( { success: false, message: 'file must be a jpeg' } ) );
-						response.end ( );
-					}
-				}
-				fr.readAsArrayBuffer ( files.image );
+            {
+                let fr = new FileReader ( ) ;
+                fr.onerror = function onerror ( ev ) 
+                {
+                    response.writeHead ( 400, { 'Content-Type': 'application/json' } );
+                    response.write ( JSON.stringify ( { success: false, message: 'invalid file' } ) );
+                    response.end ( );
+                }
+                fr.onload = function onload ( ev ) 
+                {
+                    let buff = ev.target.result;
+                    if ( buff [ 0 ] === 0xFF && buff [ 1 ] === 0xD8
+                    && buff [ buff.length - 2 ] === 0xFF && buff [ buff.length - 1 ] === 0xD9 )
+                    {
+                        Database.setImage ( songname, buff );
+                        reply ( );
+                    }
+                    else
+                    {
+                        response.writeHead ( 400, { 'Content-Type': 'application/json' } );
+                        response.write ( JSON.stringify ( { success: false, message: 'file must be a jpeg' } ) );
+                        response.end ( );
+                    }
+                }
+                fr.readAsArrayBuffer ( files.image );
             } 
-			else 
-			{
+            else 
+            {
                 reply();
             }
         } );
@@ -262,6 +264,8 @@ WebServer.registerRequestHandler ( '/process', function ( request, response, req
                 MusicPlayer.musicQueueInsert ( songname + '.mp3' );
 
                 Database.open ( `${songname}.mp3` );
+                
+                logger.log ( 'WebServer', `User ${session.variables.discordAuth.userdata.username} has uploaded ${songname}.mp3.` );
 
                 // success
                 response.writeHead ( 200, { 'Content-Type': 'application/json' } );
@@ -379,7 +383,7 @@ WebServer.registerRequestHandler ( '/auth', function ( request, response, reques
                 {
                     verifyUserCredentials ( json.access_token, json.token_type, function ( userdata )
                     {
-                        logger.log ( '[Info/WebServer] Authenticated discord user ' + userdata.id );
+                        logger.log ( 'WebServer', `Authenticated user ${userdata.id}` );
 
                         session.variables.discordAuth = { };
                         session.variables.discordAuth.data = json;
@@ -403,7 +407,7 @@ WebServer.registerRequestHandler ( '/auth', function ( request, response, reques
     }
     else
     {
-        logger.log ( '[Info/WebServer] Invalid Auth, no code provided. Redirecting...' );
+        logger.log ( 'WebServer', 'Invalid Auth, no code provided. Redirecting...' );
         return WebServer.redirect ( request, response, Config.discord_auth.redirect );
     }
 } );
@@ -418,7 +422,7 @@ WebServer.registerRequestHandler ( '/get_asset', function ( request, response, r
         cookieSkin = Config.enabled_skins [Math.floor ( Math.random ( ) * Config.enabled_skins.length )];
         cookies.set ( 'skin_id', cookieSkin, { expires: new Date ( Date.now ( ) + 5 * 60 * 1000 ) } );
 
-        logger.log ( '[Info/WebServer] random skin selected: ' + cookieSkin );
+        logger.log ( 'WebServer', 'Random skin selected: ${cookieSkin}' );
     }
 
     cookieSkin = String ( cookieSkin );

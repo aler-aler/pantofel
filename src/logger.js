@@ -6,37 +6,38 @@ let logFile = null;
 function initialize ( )
 {
     let date = new Date ( );
-    let name = date.getFullYear ( ) + "_" + date.getMonth ( ) + "_" + date.getDay ( ) + "_" + date.getHours ( ) + "_" + date.getMinutes ( ) + "_r" + Math.floor ( Math.random ( ) * 1000 );
+    let name = `${date.getFullYear ( )}-${date.getMonth ( ) + 1}-${date.getDate ( )}_${date.getHours ( )}h${date.getMinutes ( )}m${date.getSeconds ( )}s`;
 
-    name = './logs/' + name + '.log.txt';
+    name = `./logs/${name}.log.txt`;
 
     logFile = fs.createWriteStream ( name, { flags: 'w' } );
 }
 
-function logInternal ( message, prefix )
+function logInternal ( message, prefix, color )
 {
     let date = new Date ( );
-    let timestamp = date.getHours ( ) + ':' + date.getMinutes ( ) + ':' + date.getSeconds ( ) + ' ' + date.getDay ( ) + '/' + date.getMonth ( );
+    let timestamp = date.toLocaleTimeString();
 
-    message = '[' + timestamp + '][' + prefix + ']' + message;
+    let whiteMessage = `[${timestamp}][${prefix}] ${message}`;
+    let colorMessage = `${color}[${timestamp}][${prefix}] \x1b[0m${message}`;
 
-    console.log ( message );
-    logFile.write ( message + '\n' );
+    console.log ( colorMessage );
+    logFile.write ( whiteMessage + '\n' );
 }
 
-function log ( message )
+function log ( prefix, message )
 {
-    logInternal ( message, 'INFO' );
+    logInternal ( message, `INFO/${prefix}`, '\x1b[0m' );
 }
 
-function warn ( message )
+function warn ( prefix, message )
 {
-    logInternal ( message, 'WARN' );
+    logInternal ( message, `WARN/${prefix}`, '\x1b[33m' );
 }
 
-function error ( message )
+function error ( prefix, message )
 {
-    logInternal ( message, 'ERROR' );
+    logInternal ( message, `ERROR/${prefix}`, '\x1b[31m' );
 }
 
 module.exports.initialize = initialize;

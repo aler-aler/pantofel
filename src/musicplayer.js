@@ -46,13 +46,13 @@ function shuffleArray ( array )
 
 function musicQueueRandomize ( )
 {
-    logger.log ( '[Info/automusic] a new song queue will now be randomized!' );
+    logger.log ( 'MusicPlayer', 'A new song queue will now be randomized!' );
     songQueue = shuffleArray ( songs );
 }
 
 function musicQueueInsert ( song )
 {
-    logger.log ( '[Info/automusic] added song to queue: ' + song );
+    logger.log ( 'MusicPlayer', `Added song to queue: ${song}` );
     totalSongs ++;
     songQueue.push ( song );
 }
@@ -129,12 +129,12 @@ function playAnnouncer ( Client )
     voteSkipped = { };
 
     let announcerFile = getRandomAnnouncer ( );
-    logger.log ( `[Info/automusic] will now play ${song} after announcer ${announcerFile}.`);
+    logger.log ( 'MusicPlayer', `will now play ${song} after announcer ${announcerFile}.` );
 
     let announcer = globalConnection.play (`./announcer/${announcerFile}`, { passes: 3 } );
     Client.user.setActivity ( announcerFile, { type: 'LISTENING' } );
     
-    announcer.on ( 'error', function ( m ) { logger.error ( m ); } );
+    announcer.on ( 'error', function ( m ) { logger.error ( 'MusicPlayer', m ); } );
     announcer.on ( 'speaking', function ( b )
     {
         if ( !b )
@@ -156,7 +156,7 @@ function playSong ( Client, song )
     let tags = Database.getTags ( song );
     Client.user.setActivity ( tags.title ? tags.title : 'weeb shit', { type: 'LISTENING' } );
 
-    dispatcher.on ( 'error', function ( m ) { logger.error ( m ); } );
+    dispatcher.on ( 'error', function ( m ) { logger.error ( 'MusicPlayer', m ); } );
     dispatcher.on ( 'speaking', function ( b )
     {
         if ( !b )
@@ -177,11 +177,11 @@ function join ( Client )
     {
         connection.on ( 'disconnect', function ( )
         {
-            logger.log ( '[Info/automusic] disconnected from channel, will reconnect soon' );
+            logger.warn ( 'MusicPlayer', 'Disconnected from channel, will reconnect soon' );
 
             setTimeout ( function ( )
             {
-                logger.log ( '[Info/automusic] reconnecting' );
+                logger.log ( 'MusicPlayer', 'Reconnecting' );
                 join ( Client );
             }, 3000 );
         } );
@@ -190,8 +190,8 @@ function join ( Client )
 
         playAnnouncer( Client );
     } ).catch (function ( error ) {
-        logger.log ( '[Error/automusic] cannot join voice channel' );
-        logger.log ( error );
+        logger.error ( 'MusicPlayer', 'Cannot join voice channel' );
+        logger.error ( 'MusicPlayer', error );
     } );
 }
 
@@ -205,11 +205,11 @@ function init ( Client ) {
     globalVoiceChannel = Client.channels.cache.get ( Config.channel_id );
 
     if( ! globalVoiceChannel ) {
-        logger.log ( `[Info/automusic] WARNING! ${Config.channel_id} is not a valid channel id!` );
+        logger.warn ( 'MusicPlayer', `${Config.channel_id} is not a valid channel id!` );
     }
     else if (! ( globalVoiceChannel instanceof Discord.VoiceChannel ) )
     {
-        logger.log ( `[Info/automusic] WARNING! ${Config.channel_id} is not a valid voice channel id!` );
+        logger.warn ( 'MusicPlayer', `${Config.channel_id} is not a valid voice channel id!` );
     }
     else
     {

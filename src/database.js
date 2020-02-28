@@ -9,7 +9,7 @@ function open ( song )
 {
     Metadata.read ( `./playlist/${song}`, function ( err, tags ) {
         if ( err )
-            logger.error ( err );
+            logger.error ( "Database", err );
         db[song] = {
             artist: tags.artist ? tags.artist : '',
             title: tags.title ? tags.title : '',
@@ -23,7 +23,7 @@ function open ( song )
         }
         MP3Duration( `./playlist/${song}`, function ( err, duration ) {
               if ( err )
-                  logger.log(err.message);
+                  logger.error( "Database", err.message);
               db[song].duration = duration;
         });
     } );
