@@ -46,25 +46,25 @@ WebServer.registerRequestHandler ( '/songlist', function ( request, response, re
 
         Database.getFilenames( ).forEach ( function ( key )
         {
-			let tags = Database.getTags ( key );
+            let tags = Database.getTags ( key );
             allsongs += `<tr><td><a class="ext-audiobutton" data-state="play" title="Play/Pause"><audio class="ext-audiobutton" data-volume="1.0" hidden="" preload="none"><source src="/songpreview?title=${key}" type="audio/mp3"></audio></a></td>`;
-			allsongs += `<td><a href="/song?title=${ key }">${ key }</a></td>`
-			allsongs += `<td>${ tags.artist }</td>`;
-			allsongs += `<td>${ tags.title }</td>`;
+            allsongs += `<td><a href="/song?title=${ key }">${ key }</a></td>`
+            allsongs += `<td>${ tags.artist }</td>`;
+            allsongs += `<td>${ tags.title }</td>`;
             allsongs += `<td>${ tags.album }</td>`;
             allsongs += `<td>${ tags.genrename }</td></tr>`;
         } );
 
-		response.writeHead ( 200, { 'Content-Type': 'text/html' } );
+        response.writeHead ( 200, { 'Content-Type': 'text/html' } );
         WebServer.renderTemplate ( 'songlist', request, response,
         {
             allsongs: allsongs
         } );
-		response.end ( );
+        response.end ( );
     }
     else
     {
-		cookies.set ( 'recent_target', `/songlist`, { expires: new Date ( Date.now ( ) + 5 * 60 * 1000 ) } );
+        cookies.set ( 'recent_target', `/songlist`, { expires: new Date ( Date.now ( ) + 5 * 60 * 1000 ) } );
         WebServer.redirect ( request, response, '/' );
     }
 } );
@@ -101,16 +101,16 @@ WebServer.registerRequestHandler ( '/songpreview', function ( request, response,
 
         if ( fs.existsSync ( fullPath ) )
         {
-		    let stat = fs.statSync ( fullPath );
+            let stat = fs.statSync ( fullPath );
 
-		    response.writeHead ( 200,
-		    {
-			    'Content-Type': 'audio/mpeg',
-			    'Content-Length': stat.size
-		    } );
+            response.writeHead ( 200,
+            {
+                'Content-Type': 'audio/mpeg',
+                'Content-Length': stat.size
+            } );
 
-		    let readStream = fs.createReadStream ( fullPath )
-		    readStream.pipe ( response );
+            let readStream = fs.createReadStream ( fullPath )
+            readStream.pipe ( response );
         }
         else
         {
@@ -130,16 +130,16 @@ WebServer.registerRequestHandler ( '/cover', function ( request, response, reque
     if ( requestData.query && requestData.query.title )
     {
         let filename = new String ( requestData.query.title );
-		let tags = new Database.getTags ( filename );
+        let tags = new Database.getTags ( filename );
         if ( tags && tags.image )
         {
-		    response.writeHead ( 200,
-		    {
-			    'Content-Type': `image/${tags.mime}`,
-			    'Content-Length': tags.image.length
-		    } );
-			response.write ( tags.image );
-			response.end ( );
+            response.writeHead ( 200,
+            {
+                'Content-Type': `image/${tags.mime}`,
+                'Content-Length': tags.image.length
+            } );
+            response.write ( tags.image );
+            response.end ( );
         }
         else
         {
@@ -170,41 +170,60 @@ WebServer.registerRequestHandler ( '/id3', function ( request, response, request
         {
             let songname = fields.songname;
             fields.songname = null;
-			
+            
             Database.setArtist ( songname, fields.artist );
-			Database.setTitle ( songname, fields.title );
-			Database.setAlbum ( songname, fields.album );
-			Database.setGenre ( songname, fields.genre );
-			
-			const reply = () => {
-				if ( Database.write ( songname ) )
-				{
-					response.writeHead ( 200, { 'Content-Type': 'application/json' } );
-					response.write ( JSON.stringify ( { success: true, message: 'upload complete' } ) );
+            Database.setTitle ( songname, fields.title );
+            Database.setAlbum ( songname, fields.album );
+            Database.setGenre ( songname, fields.genre );
+            
+            function reply ( ) 
+			{
+                if ( Database.write ( songname ) )
+                {
+                    response.writeHead ( 200, { 'Content-Type': 'application/json' } );
+                    response.write ( JSON.stringify ( { success: true, message: 'upload complete' } ) );
+                    response.end ( );
+                }
+                else
+                {
+                    response.writeHead ( 400, { 'Content-Type': 'application/json' } );
+					response.write ( JSON.stringify ( { success: false, message: 'fatal error' } ) );
 					response.end ( );
-				}
-				else
+                }
+                if ( error ) return displayApiError ( request, response, 400, 'invalid request' );
+            };
+            
+            if ( files.image && files.image.size > 0 ) 
+			{
+				let fr = new FileReader ( ) ;
+				fr.onerror = function onerror ( ev ) 
 				{
 					response.writeHead ( 400, { 'Content-Type': 'application/json' } );
 					response.write ( JSON.stringify ( { success: false, message: 'invalid file' } ) );
 					response.end ( );
 				}
-				if ( error ) return displayApiError ( request, response, 400, 'invalid request' );
-			};
-			
-			if(files.image && files.image.size > 0) {
-				let fr = new FileReader();
-				fr.onerror = function onerror ( ev ) {
-					reply();
+				fr.onload = function onload ( ev ) 
+				{
+					let buff = ev.target.result;
+					if ( buff [ 0 ] === 0xFF && buff [ 1 ] === 0xD8
+					&& buff [ buff.length - 2 ] === 0xFF && buff [ buff.length - 1 ] === 0xD9 )
+					{
+						Database.setImage ( songname, buff );
+						reply ( );
+					}
+					else
+					{
+						response.writeHead ( 400, { 'Content-Type': 'application/json' } );
+						response.write ( JSON.stringify ( { success: false, message: 'file must be a jpeg' } ) );
+						response.end ( );
+					}
 				}
-				fr.onload = function onload ( ev ) {
-					Database.setImage ( songname, ev.target.result );
-					reply();
-				}
-				fr.readAsArrayBuffer(files.image);
-			} else {
-				reply();
-			}
+				fr.readAsArrayBuffer ( files.image );
+            } 
+			else 
+			{
+                reply();
+            }
         } );
     }
     else displayApiError ( request, response, 405, 'method not allowed' );
@@ -242,7 +261,7 @@ WebServer.registerRequestHandler ( '/process', function ( request, response, req
             {
                 MusicPlayer.musicQueueInsert ( songname + '.mp3' );
 
-				Database.open ( `${songname}.mp3` );
+                Database.open ( `${songname}.mp3` );
 
                 // success
                 response.writeHead ( 200, { 'Content-Type': 'application/json' } );
@@ -262,7 +281,7 @@ WebServer.registerRequestHandler ( '/upload', function ( request, response, requ
     if ( session.variables.discordAuth )
     {
         response.writeHead ( 200, { 'Content-Type': 'text/html' } );
-		let userdata = session.variables.discordAuth.userdata;
+        let userdata = session.variables.discordAuth.userdata;
 
         WebServer.renderTemplate ( 'uploadform', request, response,
         {
@@ -275,7 +294,7 @@ WebServer.registerRequestHandler ( '/upload', function ( request, response, requ
     }
     else
     {
-		cookies.set ( 'recent_target', `/upload`, { expires: new Date ( Date.now ( ) + 5 * 60 * 1000 ) } );
+        cookies.set ( 'recent_target', `/upload`, { expires: new Date ( Date.now ( ) + 5 * 60 * 1000 ) } );
         return WebServer.redirect ( request, response, '/' );
     }
 } );
@@ -291,7 +310,7 @@ WebServer.registerRequestHandler ( '/song', function ( request, response, reques
 
         if ( fs.existsSync ( fullPath ) )
         {
-		    let stat = fs.statSync ( fullPath );
+            let stat = fs.statSync ( fullPath );
 
             response.writeHead ( 200, { 'Content-Type': 'text/html' } );
             let userdata = session.variables.discordAuth.userdata;
@@ -299,11 +318,11 @@ WebServer.registerRequestHandler ( '/song', function ( request, response, reques
             let tags = Database.getTags ( filename );
             let genrelist = '<option value=12">Other</option>';
             for(key in genres) {
-				if ( key != "12" ) // Other był już dodany na froncie
-				{
-					genrelist += `<option value="${key}"${tags.genre == key ? ' selected' : ''}>${genres[key].name}</option>`;
-				}
-			}
+                if ( key != "12" ) // Other był już dodany na froncie
+                {
+                    genrelist += `<option value="${key}"${tags.genre == key ? ' selected' : ''}>${genres[key].name}</option>`;
+                }
+            }
             WebServer.renderTemplate ( 'songedit', request, response,
             {
                 songauthor: tags.artist ? tags.artist : '',
@@ -314,7 +333,7 @@ WebServer.registerRequestHandler ( '/song', function ( request, response, reques
                 useravatar: 'https://cdn.discordapp.com/avatars/' + userdata.id + '/' + userdata.avatar + '.png',
                 discriminator: userdata.discriminator,
                 song: requestData.query.title,
-				image: `${Config.server_url}cover?title=${filename}`
+                image: `${Config.server_url}cover?title=${filename}`
             } );
 
             response.end();
@@ -326,7 +345,7 @@ WebServer.registerRequestHandler ( '/song', function ( request, response, reques
     }
     else
     {
-		cookies.set ( 'recent_target', `/song?title=${requestData.query.title}`, { expires: new Date ( Date.now ( ) + 5 * 60 * 1000 ) } );
+        cookies.set ( 'recent_target', `/song?title=${requestData.query.title}`, { expires: new Date ( Date.now ( ) + 5 * 60 * 1000 ) } );
         WebServer.redirect ( request, response, '/' );
     }
 } );
@@ -365,9 +384,9 @@ WebServer.registerRequestHandler ( '/auth', function ( request, response, reques
                         session.variables.discordAuth = { };
                         session.variables.discordAuth.data = json;
                         session.variables.discordAuth.userdata = userdata;
-						
-						let target = cookies.get ( 'recent_target' ) ? cookies.get ( 'recent_target' ) : '/';		
-						cookies.set ( 'recent_target', `/`, { expires: new Date ( Date.now ( ) + 5 * 60 * 1000 ) } );
+                        
+                        let target = cookies.get ( 'recent_target' ) ? cookies.get ( 'recent_target' ) : '/';        
+                        cookies.set ( 'recent_target', `/`, { expires: new Date ( Date.now ( ) + 5 * 60 * 1000 ) } );
 
                         return WebServer.redirect ( request, response, target );
                     }, function ( )

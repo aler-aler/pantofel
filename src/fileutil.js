@@ -17,8 +17,8 @@ function handleUploadedFile ( filename, callback, error )
             let response = JSON.parse ( stdout );
 
             if ( ( ( response.streams.length == 1 && response.streams[0].codec_name == 'mp3' )
-			||   ( response.streams.length == 2 && ( response.streams[0].codec_name == 'mp3' || response.streams[1].codec_name == 'mp3') ) 
-			) && response.format.format_name == 'mp3' ) 
+            ||   ( response.streams.length == 2 && ( response.streams[0].codec_name == 'mp3' || response.streams[1].codec_name == 'mp3') ) 
+            ) && response.format.format_name == 'mp3' ) 
             {
                 let name = crypto.randomBytes ( 12 ).toString ( 'hex' );
 

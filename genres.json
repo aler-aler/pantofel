@@ -7,10 +7,10 @@
         "name": "Other",
         "color": "0xdddddd"
     },
-	"60": {
-		"name": "Duplicate",
-		"color": "0xffffff"
-	},
+    "60": {
+        "name": "Duplicate",
+        "color": "0xffffff"
+    },
     "13": {
         "name": "Pop",
         "color": "0xff7b25"
