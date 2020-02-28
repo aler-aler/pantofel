@@ -8,9 +8,8 @@
 
             window.addEventListener ( 'load', function ( )
             {
-                document.querySelector ( '#uploadForm' ).addEventListener ( 'change', function ( ev )
-                {
-                    let upload = document.querySelector ( '#file' );
+                let updootTitle = function() {
+                    let upload = document.querySelector ( '#inputimage' );
                     let label = document.querySelector ( '#desc' );
 
                     if ( upload.files.length > 0 )
@@ -18,9 +17,36 @@
                         let name = upload.files [0].name;
                         label.innerHTML = name;
                     }
+                }
+                updootTitle();
+                document.querySelector ( '#id3Form' ).addEventListener ( 'change', function ( ev )
+                {
+                    updootTitle();
+                } );
+                let parent = document.querySelector ( 'a.ext-audiobutton' );
+                let child = parent.children[0];
+
+                console.log(parent);
+
+                parent.addEventListener ( 'click', function ( ev )
+                {
+                    if ( parent.dataset.state === 'pause' )
+                    {
+                        child.pause();
+                        parent.dataset.state = 'play';
+                    }
+                    else
+                    {
+                        child.play();
+                        parent.dataset.state = 'pause';
+                    }
+                } );
+                child.addEventListener ( 'ended', function ( ev )
+                {
+                    parent.dataset.state = 'play';
                 } );
 
-                document.querySelector ( '#uploadForm' ).addEventListener ( 'submit', function ( ev )
+                document.querySelector ( '#id3Form' ).addEventListener ( 'submit', function ( ev )
                 {
                     ev.preventDefault ( );
 
@@ -35,7 +61,7 @@
                         blackout.style.display = 'block';
 
                         isUploading = true;
-                        request.open ( 'POST', 'process' );
+                        request.open ( 'POST', 'id3' );
 
                         request.addEventListener ( 'readystatechange', function ( reqEvent )
                         {
@@ -43,12 +69,10 @@
                             {
                                 if ( request.status == 200 )
                                 {
-                                    let jsonResult = JSON.parse ( request.responseText );
-                                    
-                                    modalbox.displayModal ( 'progressDialog', 'Przesyłanie zakończone', '<p>Twoja piosenka została dodana do puli. Niedługo powinna pojawić się na czacie głosowym ♪</p>',
+                                    modalbox.displayModal ( 'progressDialog', 'Przesyłanie zakończone', '<p>Metadane zostały zaktualizowane ♪</p>',
                                         [
                                             { id: 'progressDialogOk', message: 'Ok', handler: function ( ev ) {
-                                                window.location.href = `/song?title=${jsonResult.songname}`;
+                                                window.location.href = '/';
                                             } }
                                         ]
                                     );
@@ -61,7 +85,7 @@
 
                                         if ( jsonResult.message )
                                         {
-                                            modalbox.displayModal ( 'progressDialog', 'Wystąpił błąd', '<p>Podczas przesyłania twojej piosenki wystąpił błąd!</p><p>Serwer pozostawił komentarz: ' + jsonResult.message + '</p>',
+                                            modalbox.displayModal ( 'progressDialog', 'Wystąpił błąd', '<p>Podczas przesyłania wystąpił błąd!</p><p>Serwer pozostawił komentarz: ' + jsonResult.message + '</p>',
                                                 [
                                                     { id: 'progressDialogOk', message: 'Ok', handler: function ( ev ) {
                                                         modalbox.closeModal ( this );
@@ -71,7 +95,7 @@
                                         }
                                         else
                                         {
-                                            modalbox.displayModal ( 'progressDialog', 'Wystąpił błąd', '<p>Podczas przesyłania twojej piosenki wystąpił błąd!</p><p>Serwer nie pozostawił żadnego komentarza. Prosimy spróbować ponownie później.</p>',
+                                            modalbox.displayModal ( 'progressDialog', 'Wystąpił błąd', '<p>Podczas przesyłania wystąpił błąd!</p><p>Serwer nie pozostawił żadnego komentarza. Prosimy spróbować ponownie później.</p>',
                                                 [
                                                     { id: 'progressDialogOk', message: 'Ok', handler: function ( ev ) {
                                                         modalbox.closeModal ( this );
@@ -82,7 +106,7 @@
                                     }
                                     catch ( error )
                                     {
-                                        modalbox.displayModal ( 'progressDialog', 'Wystąpił błąd', '<p>Podczas przesyłania twojej piosenki wystąpił błąd!</p><p>Wystąpił nieznany błąd po stronie klienta</p>',
+                                        modalbox.displayModal ( 'progressDialog', 'Wystąpił błąd', '<p>Podczas przesyłania wystąpił błąd!</p><p>Wystąpił nieznany błąd po stronie klienta</p>',
                                             [
                                                 { id: 'progressDialogOk', message: 'Ok', handler: function ( ev ) {
                                                     modalbox.closeModal ( this );
@@ -105,26 +129,55 @@
     </head>
     <body>
         {{bodystart}}
-        <h1>Przesyłanie Pliku</h1>
-        <p>Plik musi być w formacie MP3. Inne formaty audio nie są obsługiwane. Wielokrotne przesyłanie niepoprawnych plików zakończy się automatyczną blokadą konta.</p>
+        <h1>
+            <a class="ext-audiobutton" data-state="play" title="Play/Pause">
+                <audio class="ext-audiobutton" data-volume="1.0" hidden=""><source src="/songpreview?title={{song}}" type="audio/mp3"></audio>
+            </a>
+            Edycja pliku
+        </h1>
         <div class="userinfo">
             <img src="{{useravatar}}" alt="Avatar">
-            <p>Przesyłasz plik jako</p>
+            <p>Edytujesz plik jako</p>
             <p class="username"><span class="name">{{username}}</span><span class="discriminator">#{{discriminator}}</span></p>
         </div>
-        <div class="uploadform">
-            <div id="uploadBlackout" class="uploadBlackout" style="display:none">
-                <img src="loading.gif" alt="Loading..." />
-            </div>
-            <form method="POST" action="process" id="uploadForm">
-                <div class="audiofile">
-                    <span id="desc">Nie wybrano pliku</span>
-                    <input type="file" name="song" id="file" class="inputfile" accept="audio/mpeg" />
-                    <label for="file" id="uploadLabel">Wybierz plik</label>
-                    <input type="submit" value="Rozpocznij Przesyłanie" />
-                </div>
-            </form>
+        <div id="uploadBlackout" class="uploadBlackout" style="display:none">
+            <img src="loading.gif" alt="Loading..." />
         </div>
+        <form method="POST" action="id3" id="id3Form">
+        <div class="audiofile">
+            <div class="coverimage" style="background-image: url('{{image}}'"></div>
+            <div>
+                    <span id="desc">Nie wybrano obrazka</span>
+                    <input type="file" id="inputimage" class="inputfile" name="image" accept="image/jpeg" />
+                    <label for="inputimage">Wyślij</label>
+            </div>
+            <div class="songdataentry">
+                <label for="inputautor">Nazwa pliku</label>
+                <input readonly type="text" name="songname" value="{{song}}">
+            </div>
+            <div class="songdataentry">
+                <label for="inputautor">Autor</label>
+                <input type="text" name="artist" value="{{songauthor}}">
+            </div>
+            <div class="songdataentry">
+                <label for="inputautor">Tytuł</label>
+                <input type="text" name="title" value="{{songname}}">
+            </div>
+            <div class="songdataentry">
+                <label for="inputautor">Album</label>
+                <input type="text" name="album" value="{{songalbum}}">
+            </div>
+            <div class="songdataentry">
+                <label for="inputgenre">Gatunek</label>
+                <select id="inputgenre" name="genre">
+                    {{genrelist}}
+                </select>
+            </div>
+            <div class="songdataentry">
+                <input type="submit" value="Submit">
+            </div>
+        </div>
+        </form>
         {{footer}}
     </body>
 </html>

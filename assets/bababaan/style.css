@@ -2,7 +2,7 @@ body {
 	background: #6b0029;
 }
 
-div.siteHeaderWordmark {
+.siteHeaderWordmark {
 	text-shadow: -1px -1px 0 #da186f, 1px -1px 0 #da186f, -1px 1px 0 #da186f, 1px 1px 0 #da186f;
 }
 
@@ -15,6 +15,10 @@ input[type=submit] {
 	background: #6b0029;
 }
 
-div.bodyWrapper>div.siteHeader {
+.siteHeaderWordmark {
+	color: #6b0029;
+}
+
+.siteHeaderWordmark:active {
 	color: #6b0029;
 }

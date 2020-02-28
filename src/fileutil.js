@@ -3,7 +3,7 @@ const fs = require ( 'fs' );
 const crypto = require ( 'crypto' );
 const { exec } = require ( 'child_process' );
 
-const Config = require ( './config.json' );
+const Config = require ( '../config.json' );
 const logger = require ( './logger.js' );
 
 function handleUploadedFile ( filename, callback, error )
@@ -16,12 +16,14 @@ function handleUploadedFile ( filename, callback, error )
         {
             let response = JSON.parse ( stdout );
 
-            if ( response.streams.length == 1 && response.streams[0].codec_name == 'mp3' && response.format.format_name == 'mp3' ) 
+            if ( ( ( response.streams.length == 1 && response.streams[0].codec_name == 'mp3' )
+            ||   ( response.streams.length == 2 && ( response.streams[0].codec_name == 'mp3' || response.streams[1].codec_name == 'mp3') ) 
+            ) && response.format.format_name == 'mp3' ) 
             {
                 let name = crypto.randomBytes ( 12 ).toString ( 'hex' );
 
-                fs.renameSync ( filename, './playlist/' + name + '.mp3' );
-                logger.log ( '[Info/WebServer] Added new music ' + name );
+                fs.renameSync ( filename, `./playlist/${ name }.mp3` );
+                logger.log ( 'WebServer', `Added new music: ${name}` );
                 return callback ( name );
             }
             else 
@@ -32,7 +34,7 @@ function handleUploadedFile ( filename, callback, error )
         {
             fs.unlinkSync ( filename );
 
-            logger.error ( exception );
+            logger.error ( 'WebServer', exception );
             error ( exception );
         }
     } );

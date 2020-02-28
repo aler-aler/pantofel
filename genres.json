@@ -1,0 +1,58 @@
+{
+    "10": {
+        "name": "New Age",
+        "color": "0x86af49"
+    },
+    "12": {
+        "name": "Other",
+        "color": "0xdddddd"
+    },
+    "60": {
+        "name": "Duplicate",
+        "color": "0xffffff"
+    },
+    "13": {
+        "name": "Pop",
+        "color": "0xff7b25"
+    },
+    "15": {
+        "name": "Rap",
+        "color": "0x000000"
+    },
+    "17": {
+        "name": "Rock",
+        "color": "0x3e4444"
+    },
+    "18": {
+        "name": "Techno",
+        "color": "0x034f84"
+    },
+    "24": {
+        "name": "Soundtrack",
+        "color": "0x618685"
+    },
+    "32": {
+        "name": "Classical",
+        "color": "0xb2b2b2"
+    },
+    "52": {
+        "name": "Electronic",
+        "color": "0xcfe0e8"
+    },
+    "99": {
+        "name": "Acoustic",
+        "color": "0xdbceb0"
+    },
+    "110": {
+        "name": "Shitpost",
+        "color": "0x7e4a35"
+    },
+    "145": {
+        "name": "Weeb",
+        "color": "0xf9d5e5"
+    },
+    "146": {
+        "name": "JPop",
+        "color": "0xe06377"
+    }
+}

@@ -106,5 +106,7 @@ v1.zip
 config.json
 logs/
 assets/alerbait/
+*.cert
+*.key
 
 # End of https://www.gitignore.io/api/node
