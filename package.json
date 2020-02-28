@@ -2,8 +2,9 @@
   "name": "pantofel",
   "version": "1.0.0",
   "description": "radjo",
-  "main": "index.js",
+  "main": "src/run.js",
   "scripts": {
+    "start": "node src/run.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "rekjn",
@@ -12,6 +13,7 @@
     "cookies": "^0.8.0",
     "discord.js": "github:discordjs/discord.js",
     "ffmpeg": "0.0.4",
+    "filereader": "^0.10.3",
     "formidable": "^1.2.1",
     "mp3-duration": "^1.1.0",
     "music-metadata": "^6.3.4",

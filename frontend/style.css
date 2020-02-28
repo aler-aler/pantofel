@@ -171,3 +171,33 @@ div.songdataentry {
 div.songdataentry label {
     display: block;
 }
+
+table.songlist {
+    width: 100%;
+}
+
+table.songlist * {
+    border: none;
+}
+
+table.songlist th {
+    text-align: left;
+    font-size: 110%;
+}
+
+table.songlist th, table.songlist td {
+    border-bottom: 1px solid #ccc;
+}
+
+table.songlist tr {
+    padding: 5px 0;
+}
+
+.coverimage {
+	float: right;
+	margin-right: 50px;
+	margin-top: 50px;
+	height: 250px;
+	width: 250px;
+	background-size: 100% 100%;
+}

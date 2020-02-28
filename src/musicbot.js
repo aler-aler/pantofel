@@ -3,7 +3,7 @@ const Client = new Discord.Client ( );
 
 const logger = require ( './logger.js' );
 
-const Config = require ( './config.json' );
+const Config = require ( '../config.json' );
 const fs = require ( 'fs' );
 
 let commands = { };

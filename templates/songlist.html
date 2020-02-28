@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        {{header}}
+        <script>
+            // frontend
+            let isUploading = false;
+
+            /*<a class="ext-audiobutton" data-state="play" title="Play/Pause">
+                <audio class="ext-audiobutton" data-volume="1.0" hidden=""><source src="/songpreview?title={{song}}" type="audio/mp3"></audio>
+            </a>*/
+            window.addEventListener ( 'load', function ( )
+            {
+                let parents = document.querySelectorAll ( 'a.ext-audiobutton' );
+                parents.forEach ( parent => {
+                    let child = parent.children[0];
+
+                    parent.addEventListener ( 'click', function ( ev )
+                    {
+                        if ( parent.dataset.state === 'pause' )
+                        {
+                            child.pause();
+                            parent.dataset.state = 'play';
+                        }
+                        else
+                        {
+                            child.play();
+                            parent.dataset.state = 'pause';
+                        }
+                    } );
+                    child.addEventListener ( 'ended', function ( ev )
+                    {
+                        parent.dataset.state = 'play';
+                    } );
+                } );
+            } );
+        </script>
+    </head>
+    <body>
+        {{bodystart}}
+        <h1>Lista utworów</h1>
+        <table class="songlist">
+            <tr>
+                <th></th>
+                <th>Plik</th>
+                <th>Autor</th>
+                <th>Tytuł</th>
+                <th>Album</th>
+                <th>Gatunek</th>
+            </tr>
+            {{allsongs}}
+        </table>
+        {{footer}}
+    </body>
+</html>

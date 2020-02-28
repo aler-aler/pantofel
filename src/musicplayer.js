@@ -1,11 +1,10 @@
 const Discord = require ( 'discord.js' );
 const logger = require ( './logger.js' );
-const Config = require ( './config.json' );
+const Config = require ( '../config.json' );
+const Database = require ( './database.js' );
 const MusicBot = require ( './musicbot.js' );
-const Metadata = require ( 'node-id3' );
-const MP3Duration = require( 'mp3-duration' );
 const fs = require ( 'fs' );
-const genres = require( './genres.json' );
+const genres = require( '../genres.json' );
 
 let isVoiceChannel = false;
 let dispatcher = undefined;
@@ -118,12 +117,6 @@ function getCurrentSong ( )
 	return currentSong;
 }
 
-function getSongList ( )
-{
-	generateSongList ( );
-	return songs;
-}
-
 function playAnnouncer ( Client )
 {
 	let song = repeat ? currentSong : forcePlay ? forcePlayPath : getNextSong ( );
@@ -139,15 +132,18 @@ function playAnnouncer ( Client )
 	logger.log ( `[Info/automusic] will now play ${song} after announcer ${announcerFile}.`);
 
 	let announcer = globalConnection.play (`./announcer/${announcerFile}`, { passes: 3 } );
-
+	Client.user.setActivity ( announcerFile, { type: 'LISTENING' } );
+	
 	announcer.on ( 'error', function ( m ) { logger.error ( m ); } );
-
-	announcer.on ( 'end', ( ) =>
+	announcer.on ( 'speaking', function ( b )
 	{
-		setTimeout ( function ( )
+		if ( !b )
 		{
-			playSong ( Client, song );
-		}, 500 );
+			setTimeout ( function ( )
+			{
+				playSong ( Client, song );
+			}, 500 );
+		}
 	} );
 }
 
@@ -156,31 +152,21 @@ function playSong ( Client, song )
 	currentSong = song;
 
 	dispatcher = globalConnection.play ( `./playlist/${song}`, { passes: 3 } );
+	
+	let tags = Database.getTags ( song );
+	Client.user.setActivity ( tags.title ? tags.title : 'weeb shit', { type: 'LISTENING' } );
 
 	dispatcher.on ( 'error', function ( m ) { logger.error ( m ); } );
-
-	Metadata.read ( `./playlist/${song}`, function ( err, tags ) {
-		if ( err )
-			logger.error ( err );
-		songMetadata = tags;
-		MP3Duration( `./playlist/${song}`, function ( err, duration ) {
-		  	if ( err )
-		  		logger.log(err.message);
-		  	songMetadata.duration = duration;
-		});
-	} );
-
-	dispatcher.on ( 'end', ( ) =>
+	dispatcher.on ( 'speaking', function ( b )
 	{
-		dispatcher = null;
-		Client.user.setActivity ( `weeb shit`, { type: 'LISTENING' } );
-		setTimeout ( function ( )
+		if ( !b )
 		{
-			if( globalVoiceChannel.members.size > 1 )
+			dispatcher = null;
+			setTimeout ( function ( )
 			{
 				playAnnouncer( Client );
-			}
-		}, 1000 );
+			}, 1000 );
+		}
 	} );
 
 }
@@ -326,35 +312,42 @@ function songStatus ( message, args )
 	}
 	function fmt(s){return(s-(s%=60))/60+(9<s?':':':0')+s}
 	let s = new Date() - dispatcher.startTime;
+	
+	let tags = Database.getTags ( currentSong );
 
-	fs.writeFile("./cover.png", songMetadata.image ? songMetadata.image.imageBuffer : null, 'base64', function ( err ) {
-	  	if ( err )
-			logger.error(err);
-		let embed = {
-			author: {
-				name: songMetadata.artist
-			},
-			image: 'https://localhost:3000/cover',
-			color: genres[parseInt(songMetadata.genre.substr(1))].color,
-			title: songMetadata.title,
-			description: `${fmt(~~(s/1000))}/${fmt(~~songMetadata.duration)}`,
-			fields: [
-				{
-					name: "album",
-					value: songMetadata.album
-				},
-				{
-					name: "genre",
-					value: genres[parseInt(songMetadata.genre.substr(1))].name
-				},
-				{
-					name: "linki",
-					value: `[Pobierz](${Config.server_url}songpreview?title=${currentSong.replace(/ /g, '%20')})  [Edytuj](${Config.server_url}song?title=${currentSong.replace(/ /g, '%20')})`
-				}
-			]
-		};
-		message.channel.send({embed: embed});
-	});
+	let embed = {
+		author: {
+			name: tags.artist
+		},
+		image: tags.image ? `${Config.server_url}cover?title="${currentSong}"` : null,
+		color: genres[tags.genre].color,
+		title: tags.title ? tags.title : currentSong,
+		description: `${fmt(~~(s/1000))}/${fmt(~~tags.duration)}`,
+		fields: []
+	};
+	
+	if ( tags.album )
+	{
+		embed.fields.push ( 
+		{
+			name: "Album",
+			value: tags.album
+		} );
+	}
+	
+	embed.fields.push ( 
+	{
+		name: "Gatunek",
+		value: tags.genrename
+	} );
+	
+	embed.fields.push ( 
+	{
+		name: "Linki",
+		value: `[Pobierz](${Config.server_url}songpreview?title=${currentSong.replace(/ /g, '%20')})  [Edytuj](${Config.server_url}song?title=${currentSong.replace(/ /g, '%20')})`
+	} );
+	
+	message.channel.send({embed: embed});
 }
 
 MusicBot.registerCommand ( 'songname', songStatus )
@@ -441,4 +434,3 @@ module.exports.musicQueueRandomize = musicQueueRandomize;
 module.exports.musicQueueGet = musicQueueGet;
 module.exports.getCurrentDispatcher = getCurrentDispatcher;
 module.exports.getCurrentSong = getCurrentSong;
-module.exports.getSongList = getSongList;

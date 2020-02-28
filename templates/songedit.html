@@ -8,6 +8,21 @@
 
             window.addEventListener ( 'load', function ( )
             {
+				let updootTitle = function() {
+					let upload = document.querySelector ( '#inputimage' );
+					let label = document.querySelector ( '#desc' );
+
+					if ( upload.files.length > 0 )
+					{
+						let name = upload.files [0].name;
+						label.innerHTML = name;
+					}
+				}
+				updootTitle();
+				document.querySelector ( '#id3Form' ).addEventListener ( 'change', function ( ev )
+				{
+					updootTitle();
+				} );
                 let parent = document.querySelector ( 'a.ext-audiobutton' );
                 let child = parent.children[0];
 
@@ -130,6 +145,12 @@
         </div>
         <form method="POST" action="id3" id="id3Form">
         <div class="audiofile">
+			<div class="coverimage" style="background-image: url('{{image}}'"></div>
+			<div>
+					<span id="desc">Nie wybrano obrazka</span>
+					<input type="file" id="inputimage" class="inputfile" name="image" accept="image/jpeg" />
+					<label for="inputimage">Wyślij</label>
+			</div>
             <div class="songdataentry">
                 <label for="inputautor">Nazwa pliku</label>
                 <input readonly type="text" name="songname" value="{{song}}">
@@ -148,7 +169,7 @@
             </div>
             <div class="songdataentry">
                 <label for="inputgenre">Gatunek</label>
-                <select id="inputgenre" name="TCON">
+                <select id="inputgenre" name="genre">
                     {{genrelist}}
                 </select>
             </div>

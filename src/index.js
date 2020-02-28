@@ -1,5 +1,5 @@
 const MusicBot = require ( './musicbot.js' );
-const Config = require ( './config.json' );
+const Config = require ( '../config.json' );
 const logger = require ( './logger.js' );
 
 const https = require ( 'https' );
@@ -206,7 +206,7 @@ const server = https.createServer ( options, function ( request, response )
 	let cookies = Cookies ( request, response );
 	let session = getRequestSession ( request, response, cookies );
 
-	logger.log ( '[Info/WebServer] Incomming Request ' + requestData.path + ' from ' + requestData.ip );
+	logger.log ( '[Info/WebServer] Incoming Request ' + requestData.path + ' from ' + requestData.ip );
 
 	if ( requestHandlers [requestData.path] )
 	{
