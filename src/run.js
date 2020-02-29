@@ -6,7 +6,7 @@ if ( cluster.isMaster )
 
     cluster.on ( 'exit', function ( worker, code, signal ) 
     {
-        console.log ( 'Cluster', 'Restarting process after unhandled exception (in 8.5 seconds)' );
+        console.error ( 'Cluster', 'Restarting process after unhandled exception (in 8.5 seconds), signal: ${signal}' );
         setTimeout ( function ( ) 
         { 
             console.log ( 'Cluster', 'Process restarted' );

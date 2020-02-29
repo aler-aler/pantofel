@@ -14,17 +14,17 @@ logger.initialize ( );
 const mimeTypes =
 {
     'js':         'application/javascript',
-    'json':     'application/json',
-    'ogg':         'application/ogg',
-    'mp3':         'audio/mpeg',
-    'wav':         'audio/x-wav',
-    'gif':         'image/gif',
-    'jpg':         'image/jpeg',
-    'jpeg':     'image/jpeg',
-    'png':         'image/png',
-    'css':         'text/css',
-    'html':     'text/html',
-    'xml':         'text/xml',
+    'json':       'application/json',
+    'ogg':        'application/ogg',
+    'mp3':        'audio/mpeg',
+    'wav':        'audio/x-wav',
+    'gif':        'image/gif',
+    'jpg':        'image/jpeg',
+    'jpeg':       'image/jpeg',
+    'png':        'image/png',
+    'css':        'text/css',
+    'html':       'text/html',
+    'xml':        'text/xml',
     'txt':        'text/plain'
 };
 

@@ -14,7 +14,7 @@ const MusicPlayer = require ( './musicplayer.js' );
 
 const genres = require( '../genres.json' );
 
-const FileReader = require ( 'FileReader' );
+const FileReader = require ( 'filereader' );
 
 function verifyUserCredentials ( access_token, token_type, success, failure )
 {

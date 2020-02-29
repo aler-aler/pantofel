@@ -9,7 +9,7 @@ function open ( song )
 {
     Metadata.read ( `./playlist/${song}`, function ( err, tags ) {
         if ( err )
-            logger.error ( "Database", err );
+            logger.error ( 'Database', err );
         db[song] = {
             artist: tags.artist ? tags.artist : '',
             title: tags.title ? tags.title : '',
@@ -17,15 +17,15 @@ function open ( song )
             image: tags.image ? tags.image.imageBuffer : null,
             mime: tags.image ? tags.image.mime : null,
             genre: !tags.raw ||    !tags.raw.TCON ? 12 
-                  : parseInt ( tags.raw.TCON.substr(1) ) != NaN ? parseInt ( tags.raw.TCON.substr(1) )
+                  : parseInt ( tags.raw.TCON.substr(1) ) != NaN ? parseInt ( tags.raw.TCON.substr ( 1 ) )
                   : parseInt ( tags.raw.TCON ) != NaN ? parseInt ( tags.raw.TCON )
                   : 12
         }
-        MP3Duration( `./playlist/${song}`, function ( err, duration ) {
-              if ( err )
-                  logger.error( "Database", err.message);
-              db[song].duration = duration;
-        });
+        MP3Duration ( `./playlist/${song}`, function ( err, duration ) {
+            if ( err )
+                logger.error( 'Database', err.message);
+            db [ song ].duration = duration;
+        } );
     } );
 }
 

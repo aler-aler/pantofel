@@ -36,9 +36,9 @@ function shuffleArray ( array )
         index = Math.floor ( ( Math.random ( ) * remaining ) );
         remaining = remaining - 1;
 
-        temp = newArray [remaining];
-        newArray [remaining] = newArray [index];
-        newArray [index] = temp;
+        temp = newArray [ remaining ];
+        newArray [ remaining ] = newArray [ index ];
+        newArray [ index ] = temp;
     }
 
     return newArray;
@@ -135,15 +135,12 @@ function playAnnouncer ( Client )
     Client.user.setActivity ( announcerFile, { type: 'LISTENING' } );
     
     announcer.on ( 'error', function ( m ) { logger.error ( 'MusicPlayer', m ); } );
-    announcer.on ( 'speaking', function ( b )
+    announcer.on ( 'finish', function ( )
     {
-        if ( !b )
-        {
-            setTimeout ( function ( )
-            {
-                playSong ( Client, song );
-            }, 500 );
-        }
+		setTimeout ( function ( )
+		{
+			playSong ( Client, song );
+		}, 500 );
     } );
 }
 
@@ -157,16 +154,13 @@ function playSong ( Client, song )
     Client.user.setActivity ( tags.title ? tags.title : 'weeb shit', { type: 'LISTENING' } );
 
     dispatcher.on ( 'error', function ( m ) { logger.error ( 'MusicPlayer', m ); } );
-    dispatcher.on ( 'speaking', function ( b )
+    dispatcher.on ( 'finish', function ( )
     {
-        if ( !b )
-        {
-            dispatcher = null;
-            setTimeout ( function ( )
-            {
-                playAnnouncer( Client );
-            }, 1000 );
-        }
+		dispatcher = null;
+		setTimeout ( function ( )
+		{
+			playAnnouncer( Client );
+		}, 1000 );
     } );
 
 }
@@ -319,7 +313,7 @@ function songStatus ( message, args )
         author: {
             name: tags.artist
         },
-        image: tags.image ? `${Config.server_url}cover?title="${currentSong}"` : null,
+        image: tags.image ? `${Config.server_url}cover?title=${currentSong}` : null,
         color: genres[tags.genre].color,
         title: tags.title ? tags.title : currentSong,
         description: `${fmt(~~(s/1000))}/${fmt(~~tags.duration)}`,
