@@ -42,25 +42,28 @@ WebServer.registerRequestHandler ( '/songlist', function ( request, response, re
 {
     if ( session.variables.discordAuth )
     {
-        let allsongs = '';
-
-        Database.getFilenames( ).forEach ( function ( key )
+        Database.getAllTags ( function ( rows )
         {
-            let tags = Database.getTags ( key );
-            allsongs += `<tr><td><a class="ext-audiobutton" data-state="play" title="Play/Pause"><audio class="ext-audiobutton" data-volume="1.0" hidden="" preload="none"><source src="/songpreview?title=${key}" type="audio/mp3"></audio></a></td>`;
-            allsongs += `<td><a href="/song?title=${ key }">${ key }</a></td>`
-            allsongs += `<td>${ tags.artist }</td>`;
-            allsongs += `<td>${ tags.title }</td>`;
-            allsongs += `<td>${ tags.album }</td>`;
-            allsongs += `<td>${ tags.genrename }</td></tr>`;
+			let allsongs = '';
+			
+			for ( let i = 0; i < rows.length; ++i )
+			{
+				let tags = rows [ i ];
+				allsongs += `<tr><td><a class="ext-audiobutton" data-state="play" title="Play/Pause"><audio class="ext-audiobutton" data-volume="1.0" hidden="" preload="none"><source src="/songpreview?title=${tags.id}" type="audio/mp3"></audio></a></td>`;
+				allsongs += `<td><a href="/song?title=${tags.id}">${tags.id}</a></td>`
+				allsongs += `<td>${tags.artist}</td>`;
+				allsongs += `<td>${tags.title}</td>`;
+				allsongs += `<td>${tags.album}</td>`;
+				allsongs += `<td>${tags.genrename}</td></tr>`;
+			}
+			
+			response.writeHead ( 200, { 'Content-Type': 'text/html' } );
+			WebServer.renderTemplate ( 'songlist', request, response,
+			{
+				allsongs: allsongs
+			} );
+			response.end ( );
         } );
-
-        response.writeHead ( 200, { 'Content-Type': 'text/html' } );
-        WebServer.renderTemplate ( 'songlist', request, response,
-        {
-            allsongs: allsongs
-        } );
-        response.end ( );
     }
     else
     {
@@ -130,23 +133,25 @@ WebServer.registerRequestHandler ( '/cover', function ( request, response, reque
     if ( requestData.query && requestData.query.title )
     {
         let filename = new String ( requestData.query.title );
-        let tags = new Database.getTags ( filename );
-        if ( tags && tags.image )
-        {
-            response.writeHead ( 200,
-            {
-                'Content-Type': `image/${tags.mime}`,
-                'Content-Length': tags.image.length
-            } );
-            response.write ( tags.image );
-            response.end ( );
-        }
-        else
-        {
-            response.writeHead ( 200, { 'Content-Type': 'application/json' } );
-            response.write ( JSON.stringify ( { 'error': true, 'message': 'not found' } ) );
-            response.end ( );
-        }
+        Database.getTags ( filename, function ( tags )
+		{
+			if ( tags && tags.image )
+			{
+				response.writeHead ( 200,
+				{
+					'Content-Type': `image/${tags.mime}`,
+					'Content-Length': tags.image.length
+				} );
+				response.write ( tags.image );
+				response.end ( );
+			}
+			else
+			{
+				response.writeHead ( 200, { 'Content-Type': 'application/json' } );
+				response.write ( JSON.stringify ( { 'error': true, 'message': 'not found' } ) );
+				response.end ( );
+			}
+		} );
     }
     else
     {
@@ -170,62 +175,23 @@ WebServer.registerRequestHandler ( '/id3', function ( request, response, request
         {
             let songname = fields.songname;
             fields.songname = null;
-            
-            Database.setArtist ( songname, fields.artist );
-            Database.setTitle ( songname, fields.title );
-            Database.setAlbum ( songname, fields.album );
-            Database.setGenre ( songname, fields.genre );
-            
-            function reply ( ) 
-            {
-                if ( Database.write ( songname ) )
-                {
-                    if ( session.variables.discordAuth )
-                        logger.log ( 'WebServer', `User ${session.variables.discordAuth.userdata.username} has updated ${songname}.` );
-                    response.writeHead ( 200, { 'Content-Type': 'application/json' } );
-                    response.write ( JSON.stringify ( { success: true, message: 'upload complete' } ) );
-                    response.end ( );
-                }
-                else
-                {
-                    response.writeHead ( 400, { 'Content-Type': 'application/json' } );
-                    response.write ( JSON.stringify ( { success: false, message: 'fatal error' } ) );
-                    response.end ( );
-                }
-                if ( error ) return displayApiError ( request, response, 400, 'invalid request' );
-            };
-            
-            if ( files.image && files.image.size > 0 ) 
-            {
-                let fr = new FileReader ( ) ;
-                fr.onerror = function onerror ( ev ) 
-                {
-                    response.writeHead ( 400, { 'Content-Type': 'application/json' } );
-                    response.write ( JSON.stringify ( { success: false, message: 'invalid file' } ) );
-                    response.end ( );
-                }
-                fr.onload = function onload ( ev ) 
-                {
-                    let buff = ev.target.result;
-                    if ( buff [ 0 ] === 0xFF && buff [ 1 ] === 0xD8
-                    && buff [ buff.length - 2 ] === 0xFF && buff [ buff.length - 1 ] === 0xD9 )
-                    {
-                        Database.setImage ( songname, buff );
-                        reply ( );
-                    }
-                    else
-                    {
-                        response.writeHead ( 400, { 'Content-Type': 'application/json' } );
-                        response.write ( JSON.stringify ( { success: false, message: 'file must be a jpeg' } ) );
-                        response.end ( );
-                    }
-                }
-                fr.readAsArrayBuffer ( files.image );
-            } 
-            else 
-            {
-                reply();
-            }
+			
+			Database.update ( fields, songname, function ( )
+			{
+				if ( session.variables.discordAuth )
+				{
+					logger.log ( 'WebServer', `User ${session.variables.discordAuth.userdata.username} has updated ${songname}.` );
+					response.writeHead ( 200, { 'Content-Type': 'application/json' } );
+					response.write ( JSON.stringify ( { success: true, message: 'upload complete' } ) );
+					response.end ( );
+				}
+				else
+				{
+					response.writeHead ( 400, { 'Content-Type': 'application/json' } );
+					response.write ( JSON.stringify ( { success: false, message: 'fatal error' } ) );
+					response.end ( );
+				}
+			} );
         } );
     }
     else displayApiError ( request, response, 405, 'method not allowed' );
@@ -263,7 +229,7 @@ WebServer.registerRequestHandler ( '/process', function ( request, response, req
             {
                 MusicPlayer.musicQueueInsert ( songname + '.mp3' );
 
-                Database.open ( `${songname}.mp3` );
+                Database.add ( `${songname}.mp3` );
                 
                 logger.log ( 'WebServer', `User ${session.variables.discordAuth.userdata.username} has uploaded ${songname}.mp3.` );
 
@@ -316,31 +282,33 @@ WebServer.registerRequestHandler ( '/song', function ( request, response, reques
         {
             let stat = fs.statSync ( fullPath );
 
-            response.writeHead ( 200, { 'Content-Type': 'text/html' } );
             let userdata = session.variables.discordAuth.userdata;
 
-            let tags = Database.getTags ( filename );
-            let genrelist = '<option value=12">Other</option>';
-            for(key in genres) {
-                if ( key != "12" ) // Other był już dodany na froncie
-                {
-                    genrelist += `<option value="${key}"${tags.genre == key ? ' selected' : ''}>${genres[key].name}</option>`;
-                }
-            }
-            WebServer.renderTemplate ( 'songedit', request, response,
-            {
-                songauthor: tags.artist ? tags.artist : '',
-                songname: tags.title ? tags.title : '',
-                songalbum: tags.album ? tags.album : '',
-                genrelist: genrelist,
-                username: userdata.username,
-                useravatar: 'https://cdn.discordapp.com/avatars/' + userdata.id + '/' + userdata.avatar + '.png',
-                discriminator: userdata.discriminator,
-                song: requestData.query.title,
-                image: `${Config.server_url}cover?title=${filename}`
-            } );
+            Database.getTags ( filename, function ( tags )
+			{
+				response.writeHead ( 200, { 'Content-Type': 'text/html' } );
+				let genrelist = '<option value=12">Other</option>';
+				for(key in genres) {
+					if ( key != "12" ) // Other był już dodany na froncie
+					{
+						genrelist += `<option value="${key}"${tags.genre == key ? ' selected' : ''}>${genres[key].name}</option>`;
+					}
+				}
+				WebServer.renderTemplate ( 'songedit', request, response,
+				{
+					songauthor: tags.artist ? tags.artist : '',
+					songname: tags.title ? tags.title : '',
+					songalbum: tags.album ? tags.album : '',
+					genrelist: genrelist,
+					username: userdata.username,
+					useravatar: 'https://cdn.discordapp.com/avatars/' + userdata.id + '/' + userdata.avatar + '.png',
+					discriminator: userdata.discriminator,
+					song: requestData.query.title,
+					image: `${Config.server_url}cover?title=${filename}`
+				} );
 
-            response.end();
+				response.end();
+			} );
         }
         else
         {

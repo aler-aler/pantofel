@@ -108,5 +108,7 @@ logs/
 assets/alerbait/
 *.cert
 *.key
+covers/
+db/
 
 # End of https://www.gitignore.io/api/node

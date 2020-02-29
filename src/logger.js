@@ -18,11 +18,11 @@ function logInternal ( message, prefix, color )
     let date = new Date ( );
     let timestamp = date.toLocaleTimeString();
 
-    let whiteMessage = `[${timestamp}][${prefix}] ${message}`;
+    let whiteMessage = `[${timestamp}][${prefix}] ${message}\n`;
     let colorMessage = `${color}[${timestamp}][${prefix}] \x1b[0m${message}`;
 
     console.log ( colorMessage );
-    logFile.write ( whiteMessage + '\n' );
+    logFile.write ( whiteMessage );
 }
 
 function log ( prefix, message )

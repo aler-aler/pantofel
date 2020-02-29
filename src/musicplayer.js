@@ -150,19 +150,20 @@ function playSong ( Client, song )
 
     dispatcher = globalConnection.play ( `./playlist/${song}`, { passes: 3 } );
     
-    let tags = Database.getTags ( song );
-    Client.user.setActivity ( tags.title ? tags.title : 'weeb shit', { type: 'LISTENING' } );
+    Database.getTags ( song, function ( tags )
+	{
+		Client.user.setActivity ( tags.title ? tags.title : 'weeb shit', { type: 'LISTENING' } );
 
-    dispatcher.on ( 'error', function ( m ) { logger.error ( 'MusicPlayer', m ); } );
-    dispatcher.on ( 'finish', function ( )
-    {
-		dispatcher = null;
-		setTimeout ( function ( )
+		dispatcher.on ( 'error', function ( m ) { logger.error ( 'MusicPlayer', m ); } );
+		dispatcher.on ( 'finish', function ( )
 		{
-			playAnnouncer( Client );
-		}, 1000 );
-    } );
-
+			dispatcher = null;
+			setTimeout ( function ( )
+			{
+				playAnnouncer( Client );
+			}, 1000 );
+		} );
+	} );
 }
 
 function join ( Client )
@@ -307,41 +308,42 @@ function songStatus ( message, args )
     function fmt(s){return(s-(s%=60))/60+(9<s?':':':0')+s}
     let s = new Date() - dispatcher.startTime;
     
-    let tags = Database.getTags ( currentSong );
-
-    let embed = {
-        author: {
-            name: tags.artist
-        },
-        image: tags.image ? `${Config.server_url}cover?title=${currentSong}` : null,
-        color: genres[tags.genre].color,
-        title: tags.title ? tags.title : currentSong,
-        description: `${fmt(~~(s/1000))}/${fmt(~~tags.duration)}`,
-        fields: []
-    };
-    
-    if ( tags.album )
-    {
-        embed.fields.push ( 
-        {
-            name: "Album",
-            value: tags.album
-        } );
-    }
-    
-    embed.fields.push ( 
-    {
-        name: "Gatunek",
-        value: tags.genrename
-    } );
-    
-    embed.fields.push ( 
-    {
-        name: "Linki",
-        value: `[Pobierz](${Config.server_url}songpreview?title=${currentSong.replace(/ /g, '%20')})  [Edytuj](${Config.server_url}song?title=${currentSong.replace(/ /g, '%20')})`
-    } );
-    
-    message.channel.send({embed: embed});
+    Database.getTags ( filename, function ( tags )
+	{
+		let embed = {
+			author: {
+				name: tags.artist
+			},
+			image: tags.image ? `${Config.server_url}cover?title=${currentSong}` : null,
+			color: genres[tags.genre].color,
+			title: tags.title ? tags.title : currentSong,
+			description: `${fmt(~~(s/1000))}/${fmt(~~tags.duration)}`,
+			fields: []
+		};
+		
+		if ( tags.album )
+		{
+			embed.fields.push ( 
+			{
+				name: "Album",
+				value: tags.album
+			} );
+		}
+		
+		embed.fields.push ( 
+		{
+			name: "Gatunek",
+			value: tags.genrename
+		} );
+		
+		embed.fields.push ( 
+		{
+			name: "Linki",
+			value: `[Pobierz](${Config.server_url}songpreview?title=${currentSong.replace(/ /g, '%20')})  [Edytuj](${Config.server_url}song?title=${currentSong.replace(/ /g, '%20')})`
+		} );
+		
+		message.channel.send({embed: embed});
+	} );
 }
 
 MusicBot.registerCommand ( 'songname', songStatus )
